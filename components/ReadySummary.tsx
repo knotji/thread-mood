@@ -1,0 +1,75 @@
+import type { ThreadResult } from "@/types/thread";
+import { CopyButton } from "./CopyButton";
+
+type ReadySummaryProps = {
+  result: ThreadResult;
+};
+
+export function ReadySummary({ result }: ReadySummaryProps) {
+  const primarySong = result.musicMatch.songSuggestions[0];
+  const songLine = primarySong
+    ? `${primarySong.title} - ${primarySong.artist}`
+    : result.musicMatch.songKeywords[0];
+  const hashtags = result.hashtags.join(" ");
+  const copyValue = [
+    "ข้อความบนคลิป / ใต้คลิป:",
+    result.bestPick.caption,
+    "",
+    "แฮชแท็ก:",
+    hashtags,
+    "",
+    "เพลง:",
+    songLine,
+    `Keywords: ${result.musicMatch.songKeywords.join(", ")}`,
+  ].join("\n");
+
+  return (
+    <section className="rounded-3xl border border-sky-100 bg-sky-50 p-4 shadow-sm">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+            สรุปพร้อมลง
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+            Best Pick สำหรับคลิปนี้
+          </h2>
+        </div>
+        <CopyButton value={copyValue} label="คัดลอกทั้งชุด" />
+      </div>
+
+      <div className="space-y-3">
+        <SummaryItem title="ข้อความบนคลิป / ใต้คลิป" preserveLines>
+          {result.bestPick.caption}
+        </SummaryItem>
+        <SummaryItem title="แฮชแท็กแมส ๆ">{hashtags}</SummaryItem>
+        <SummaryItem title="เพลง">
+          <span className="font-semibold">{songLine}</span>
+          <span className="mt-1 block text-sm text-slate-500">
+            ค้นเพิ่มใน IG Music: {result.musicMatch.songKeywords.join(", ")}
+          </span>
+        </SummaryItem>
+      </div>
+    </section>
+  );
+}
+
+type SummaryItemProps = {
+  title: string;
+  children: React.ReactNode;
+  preserveLines?: boolean;
+};
+
+function SummaryItem({ title, children, preserveLines }: SummaryItemProps) {
+  return (
+    <div className="rounded-2xl bg-white p-3 ring-1 ring-sky-100/80">
+      <p className="text-sm font-medium text-slate-500">{title}</p>
+      <div
+        className={`mt-1 leading-7 text-slate-950 ${
+          preserveLines ? "whitespace-pre-line text-lg font-semibold" : ""
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
