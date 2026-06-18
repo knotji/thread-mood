@@ -19,16 +19,28 @@ export function BestPickCard({ bestPick }: BestPickCardProps) {
       </div>
       <div className="space-y-3">
         <div className="rounded-2xl bg-white/10 p-3">
-          <p className="text-sm font-medium text-slate-300">Overlay</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-300">Overlay</p>
+            <CopyButton value={bestPick.overlay} label="คัดลอก Overlay" />
+          </div>
           <p className="mt-1 whitespace-pre-line text-lg font-semibold leading-8">
             {bestPick.overlay}
           </p>
         </div>
         <div className="rounded-2xl bg-white/10 p-3">
-          <p className="text-sm font-medium text-slate-300">Caption</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-300">Caption</p>
+            <CopyButton value={bestPick.caption} label="คัดลอก Caption" />
+          </div>
           <p className="mt-1 leading-7">{bestPick.caption}</p>
         </div>
-        <p className="text-sm leading-6 text-slate-300">{bestPick.reason}</p>
+        <div className="rounded-2xl bg-white/10 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-300">เหตุผล</p>
+            <CopyButton value={bestPick.reason} label="คัดลอกเหตุผล" />
+          </div>
+          <p className="mt-1 text-sm leading-6 text-slate-300">{bestPick.reason}</p>
+        </div>
       </div>
     </section>
   );
