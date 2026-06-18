@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { CATEGORIES, TONES } from "@/types/thread";
 import {
   fallbackResult,
+  createLocalFallbackResult,
+  generateThreadLoose,
   generateThreadWithGemini,
   generateThreadWithoutImage,
 } from "@/lib/gemini";
@@ -91,10 +93,32 @@ export async function POST(request: Request) {
       }
     }
 
+    if (selectedCategory && selectedTone) {
+      try {
+        const result = await generateThreadLoose({
+          category: selectedCategory,
+          tone: selectedTone,
+        });
+
+        return NextResponse.json({
+          result,
+          fallback: true,
+          error:
+            "AI วิเคราะห์รูปไม่สำเร็จ เลยคิดจากหมวดและโทนให้ก่อนนะ",
+        });
+      } catch (looseError) {
+        console.error("loose fallback failed", looseError);
+      }
+    }
+
     return NextResponse.json({
-      result: fallbackResult,
+      result: selectedCategory && selectedTone
+        ? createLocalFallbackResult(selectedCategory, selectedTone)
+        : fallbackResult,
       fallback: true,
-      error: "AI สะดุดนิดหน่อย เลยส่งชุดไอเดียสำรองให้ก่อนนะ",
+      error: selectedCategory && selectedTone
+        ? "AI ยังตอบไม่ได้ เลยจัดชุดสำรองตามหมวดและโทนให้ก่อนนะ"
+        : "AI สะดุดนิดหน่อย เลยส่งชุดไอเดียสำรองให้ก่อนนะ",
     });
   }
 }

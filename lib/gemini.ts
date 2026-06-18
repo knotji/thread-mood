@@ -141,6 +141,181 @@ export const fallbackResult: ThreadResult = {
   },
 };
 
+export function createLocalFallbackResult(category: string, tone: string): ThreadResult {
+  const isRunning = category === "วิ่ง";
+  const isHeartbreak = category === "อกหัก";
+  const isSky = category === "ท้องฟ้า" || category === "พระอาทิตย์ตก";
+  const isPlayful = tone === "กวนตีน" || category === "กวน ๆ";
+
+  if (isRunning) {
+    return {
+      imageMood: "ให้ฟีลมีแรงอยู่ข้างใน เหนื่อยได้ แต่ยังอยากพาตัวเองไปต่อ",
+      contentAngle: "การวิ่งในฐานะการกลับมาชนะใจตัวเองทีละนิด",
+      overlayThreads: [
+        "ไม่ได้เก่งทุกวัน\nแต่ยังไปต่อทุกวัน",
+        "วิ่งช้าไม่เป็นไร\nใจอย่าหยุดก็พอ",
+        "เหนื่อยแค่ไหน\nก็ยังพาตัวเองมาได้",
+        "ไม่ต้องชนะใคร\nแค่ไม่แพ้ใจตัวเอง",
+        "วันนี้วิ่งเพื่อใจ\nไม่ใช่เพื่อสถิติ",
+      ],
+      captions: [
+        "บางวันไม่ได้วิ่งเพื่อเร็วขึ้น แค่วิ่งเพื่อไม่ทิ้งตัวเองไว้ที่เดิม",
+        "เหนื่อยก็พักได้ แต่อย่าลืมกลับมาพาตัวเองไปต่อ",
+        "ทุกก้าวไม่ได้เปลี่ยนโลก แต่เปลี่ยนใจเราให้แข็งแรงขึ้นได้",
+      ],
+      hashtags: ["#reelsไทย", "#วิ่งไหนดี", "#runningmotivation", "#ฮีลใจ", "#ออกกำลังกาย"],
+      musicMatch: {
+        mood: "เพลงจังหวะกลาง ๆ มีพลังบวก ฟังแล้วอยากก้าวต่อ",
+        whyItFits:
+          "เข้ากับเธรดที่พูดถึงความพยายาม การกลับมาหาตัวเอง และพลังใจระหว่างทาง",
+        songKeywords: ["running reels audio", "thai pop motivation", "upbeat healing"],
+        songSuggestions: [
+          {
+            title: "Golden Hour",
+            artist: "JVKE",
+            reason: "ให้ฟีลสว่าง มีพลัง และเข้ากับคลิปวิ่งช่วงแสงสวย",
+          },
+          {
+            title: "เดินมาส่ง",
+            artist: "First Anuwat",
+            reason: "มีความอบอุ่นและเดินหน้าต่อ เหมาะกับ mood ฮีลใจ",
+          },
+          {
+            title: "Good Days",
+            artist: "SZA",
+            reason: "ฟีลปล่อยใจและกลับมาอยู่กับตัวเอง ใช้กับคลิป aesthetic ได้ดี",
+          },
+        ],
+      },
+      bestPick: {
+        overlay: "ไม่ต้องชนะใคร\nแค่ไม่แพ้ใจตัวเอง",
+        caption: "บางวันไม่ได้วิ่งเพื่อเร็วขึ้น แค่วิ่งเพื่อไม่ทิ้งตัวเองไว้ที่เดิม",
+        reason: "อ่านง่าย แมส และเชื่อมกับมุมวิ่ง/ฮีลใจได้ชัด",
+      },
+    };
+  }
+
+  if (isHeartbreak) {
+    return {
+      imageMood: "มีความเงียบ เหงา และเหมือนกำลังค่อย ๆ ปล่อยบางอย่างออกจากใจ",
+      contentAngle: "อกหักแบบโตขึ้น ไม่ฟูมฟาย แต่ยอมรับว่ามันยังรู้สึก",
+      overlayThreads: [
+        "ไม่ได้ลืมง่าย\nแค่ไม่อยากเจ็บซ้ำ",
+        "บางคนไม่กลับมา\nแต่เราต้องกลับมาหาตัวเอง",
+        "รักมากแค่ไหน\nก็ต้องรักตัวเองให้ทัน",
+        "คิดถึงได้\nแต่ไม่กลับไปแล้ว",
+        "เสียใจได้\nแต่อย่าเสียตัวเอง",
+      ],
+      captions: [
+        "โตขึ้นคือยอมรับว่า บางความรักสอนเราได้ แม้ไม่ได้อยู่กับเราแล้ว",
+        "คิดถึงเขาได้ แต่อย่าลืมคิดถึงตัวเองด้วย",
+        "บางการจากลาไม่ได้ทำให้เราแพ้ แค่ทำให้เรารู้ว่าควรรักตัวเองยังไง",
+      ],
+      hashtags: ["#เธรดความรู้สึก", "#อกหัก", "#ฮีลใจ", "#reelsไทย", "#รักตัวเอง"],
+      musicMatch: {
+        mood: "เพลงเศร้านิด ๆ แต่ยังสวยและไม่ดาร์กเกินไป",
+        whyItFits:
+          "เข้ากับเธรดที่ยอมรับความเสียใจแต่ยังเลือกพาตัวเองออกมา",
+        songKeywords: ["sad thai pop reels", "heartbreak healing", "thai indie sad"],
+        songSuggestions: [
+          {
+            title: "ใจหายอ่ะ สงสัยอยู่ที่เธอ",
+            artist: "Milli",
+            reason: "มีความเจ็บแบบร่วมสมัยและเข้ากับคลิป Reels ได้ง่าย",
+          },
+          {
+            title: "Until I Found You",
+            artist: "Stephen Sanchez",
+            reason: "โรแมนติก เหงา และใช้กับภาพ mood ละมุนได้ดี",
+          },
+          {
+            title: "double take",
+            artist: "dhruv",
+            reason: "ฟีลคิดถึงนุ่ม ๆ ไม่ดราม่าเกินไป",
+          },
+        ],
+      },
+      bestPick: {
+        overlay: "เสียใจได้\nแต่อย่าเสียตัวเอง",
+        caption: "คิดถึงเขาได้ แต่อย่าลืมคิดถึงตัวเองด้วย",
+        reason: "สั้น จำง่าย และมีมุมฮีลใจที่คนอินได้กว้าง",
+      },
+    };
+  }
+
+  if (isSky) {
+    return {
+      imageMood: "นุ่ม เงียบ และมีความคิดถึงปนปล่อยวาง เหมือนช่วงเวลาที่ใจเริ่มเบาลง",
+      contentAngle: "ท้องฟ้าเป็นพื้นที่พักใจสำหรับวันที่พูดอะไรไม่ออก",
+      overlayThreads: [
+        "ฟ้ายังเปลี่ยนสี\nเราก็เปลี่ยนใจได้",
+        "บางเย็นไม่ได้เศร้า\nแค่เงียบขึ้น",
+        "ปล่อยบางอย่าง\nให้เบาเหมือนฟ้า",
+        "วันนี้ไม่ต้องเก่ง\nแค่หายใจให้ทั่วก็พอ",
+        "ฟ้ากว้างพอ\nให้เราวางเรื่องเดิม ๆ",
+      ],
+      captions: [
+        "บางวันฟ้าไม่ได้สวยเป็นพิเศษ แต่ทำให้ใจเรานิ่งขึ้นแบบพอดี",
+        "ถ้ายังหาคำตอบไม่ได้ ลองปล่อยให้วันนี้ค่อย ๆ ผ่านไปก่อนก็ได้",
+        "เราไม่จำเป็นต้องเข้าใจทุกอย่างในวันที่ยังเหนื่อย",
+      ],
+      hashtags: ["#ท้องฟ้า", "#sunsetvibes", "#aestheticreels", "#ฮีลใจ", "#reelsไทย"],
+      musicMatch: {
+        mood: "เพลงละมุน ฟุ้ง ๆ เหมาะกับภาพฟ้าและช่วงเย็น",
+        whyItFits:
+          "เข้ากับความนุ่ม เหงา และปล่อยวางของเธรด โดยไม่ทำให้เศร้าเกินไป",
+        songKeywords: ["aesthetic reels audio", "sunset pop", "soft thai indie"],
+        songSuggestions: [
+          {
+            title: "Moonlight",
+            artist: "Kali Uchis",
+            reason: "ฟีลนุ่ม ล่อง และเข้ากับคลิป aesthetic ได้ดี",
+          },
+          {
+            title: "Glue Song",
+            artist: "beabadoobee",
+            reason: "ละมุน อบอุ่น และเหมาะกับภาพท้องฟ้านิ่ง ๆ",
+          },
+          {
+            title: "ลืมไปแล้วว่าลืมยังไง",
+            artist: "Jeff Satur",
+            reason: "มีความคิดถึงละมุน ๆ เหมาะกับ sunset/sky mood",
+          },
+        ],
+      },
+      bestPick: {
+        overlay: "ฟ้ายังเปลี่ยนสี\nเราก็เปลี่ยนใจได้",
+        caption: "เราไม่จำเป็นต้องเข้าใจทุกอย่างในวันที่ยังเหนื่อย",
+        reason: "เชื่อมภาพฟ้ากับความรู้สึกได้ดี และเป็นประโยคที่แชร์ง่าย",
+      },
+    };
+  }
+
+  return {
+    ...fallbackResult,
+    imageMood: isPlayful
+      ? "ให้ฟีลเบา ๆ กวนหน่อย แต่ยังน่ารักและลง Reels ได้"
+      : fallbackResult.imageMood,
+    captions: isPlayful
+      ? [
+          "บางทีก็ไม่ได้ขี้เกียจ แค่ชีวิตยังไม่เปิดโหมดจริงจัง",
+          "โตแล้วไม่ได้แปลว่าต้องไหวทุกเรื่อง แปลว่าเนียนเก่งขึ้น",
+          "พักก่อน ไม่ได้แพ้ แค่แบตชีวิตเหลือ 12%",
+        ]
+      : fallbackResult.captions,
+    hashtags: isPlayful
+      ? ["#reelsไทย", "#ชีวิตประจำวัน", "#กวนๆ", "#moodoftheday", "#viralreels"]
+      : fallbackResult.hashtags,
+    bestPick: isPlayful
+      ? {
+          overlay: "ไม่ได้ขี้เกียจ\nแค่ใจยังโหลดไม่เสร็จ",
+          caption: "โตแล้วไม่ได้แปลว่าต้องไหวทุกเรื่อง แปลว่าเนียนเก่งขึ้น",
+          reason: "กวนเบา ๆ อ่านง่าย และเข้ากับคอนเทนต์ชีวิตประจำวัน",
+        }
+      : fallbackResult.bestPick,
+  };
+}
+
 export async function generateThreadWithGemini({
   imageBase64,
   mimeType,
@@ -275,6 +450,68 @@ export async function generateThreadWithoutImage({
     config: {
       responseMimeType: "application/json",
       responseSchema,
+      temperature: 0.95,
+      topP: 0.95,
+    },
+  });
+
+  return normalizeThreadResult(parseJson(response.text ?? ""));
+}
+
+export async function generateThreadLoose({
+  category,
+  tone,
+}: GenerateTextOnlyInput): Promise<ThreadResult> {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  const toneGuidance = getToneGuidance(tone);
+  const prompt = `
+สร้างไอเดีย ThreadMood สำหรับ Instagram Reels ภาษาไทย
+
+หมวด: ${category}
+โทน: ${tone}
+วิธีใช้โทน: ${toneGuidance}
+
+ตอบเป็น JSON เท่านั้น โดยใช้โครงนี้:
+{
+  "imageMood": "string",
+  "contentAngle": "string",
+  "overlayThreads": ["string", "string", "string", "string", "string"],
+  "captions": ["string", "string", "string"],
+  "hashtags": ["string", "string", "string", "string", "string"],
+  "musicMatch": {
+    "mood": "string",
+    "whyItFits": "string",
+    "songKeywords": ["string", "string", "string"],
+    "songSuggestions": [
+      { "title": "string", "artist": "string", "reason": "string" },
+      { "title": "string", "artist": "string", "reason": "string" },
+      { "title": "string", "artist": "string", "reason": "string" }
+    ]
+  },
+  "bestPick": {
+    "overlay": "string",
+    "caption": "string",
+    "reason": "string"
+  }
+}
+
+captions คือเธรด/คำบนคลิปแบบคำคม ข้อคิด คำสอน หรือ mindset ที่คนไทยนิยมใน IG Reels
+bestPick.caption ต้องเป็นข้อความหลักสำหรับใช้บนคลิป / ใต้คลิป
+hashtags ต้องแมส ๆ กว้าง ๆ เพื่อ reach
+เพลงต้องฟีลตามกระแส Reels/TikTok แต่ไม่ต้องอ้างว่า realtime trending
+`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
       temperature: 0.95,
       topP: 0.95,
     },

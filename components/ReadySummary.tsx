@@ -38,11 +38,26 @@ export function ReadySummary({ result }: ReadySummaryProps) {
       </div>
 
       <div className="space-y-3">
-        <SummaryItem title="ข้อความบนคลิป / ใต้คลิป" preserveLines>
+        <SummaryItem
+          title="ข้อความบนคลิป / ใต้คลิป"
+          copyValue={result.bestPick.caption}
+          copyLabel="คัดลอกข้อความ"
+          preserveLines
+        >
           {result.bestPick.caption}
         </SummaryItem>
-        <SummaryItem title="แฮชแท็กแมส ๆ">{hashtags}</SummaryItem>
-        <SummaryItem title="เพลง">
+        <SummaryItem
+          title="แฮชแท็กแมส ๆ"
+          copyValue={hashtags}
+          copyLabel="คัดลอก #"
+        >
+          {hashtags}
+        </SummaryItem>
+        <SummaryItem
+          title="เพลง"
+          copyValue={`${songLine}\nKeywords: ${result.musicMatch.songKeywords.join(", ")}`}
+          copyLabel="คัดลอกเพลง"
+        >
           <span className="font-semibold">{songLine}</span>
           <span className="mt-1 block text-sm text-slate-500">
             ค้นเพิ่มใน IG Music: {result.musicMatch.songKeywords.join(", ")}
@@ -57,12 +72,23 @@ type SummaryItemProps = {
   title: string;
   children: React.ReactNode;
   preserveLines?: boolean;
+  copyValue?: string;
+  copyLabel?: string;
 };
 
-function SummaryItem({ title, children, preserveLines }: SummaryItemProps) {
+function SummaryItem({
+  title,
+  children,
+  preserveLines,
+  copyValue,
+  copyLabel,
+}: SummaryItemProps) {
   return (
     <div className="rounded-2xl bg-white p-3 ring-1 ring-sky-100/80">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-slate-500">{title}</p>
+        {copyValue ? <CopyButton value={copyValue} label={copyLabel} /> : null}
+      </div>
       <div
         className={`mt-1 leading-7 text-slate-950 ${
           preserveLines ? "whitespace-pre-line text-lg font-semibold" : ""
