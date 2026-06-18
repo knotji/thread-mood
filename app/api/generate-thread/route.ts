@@ -117,8 +117,18 @@ export async function POST(request: Request) {
         : fallbackResult,
       fallback: true,
       error: selectedCategory && selectedTone
-        ? "AI ยังตอบไม่ได้ เลยจัดชุดสำรองตามหมวดและโทนให้ก่อนนะ"
+        ? getFallbackErrorMessage(error)
         : "AI สะดุดนิดหน่อย เลยส่งชุดไอเดียสำรองให้ก่อนนะ",
     });
   }
+}
+
+function getFallbackErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (/quota|RESOURCE_EXHAUSTED|429|rate/i.test(message)) {
+    return "โควต้า Gemini เต็มชั่วคราว เลยจัดชุดสำรองตามหมวดและโทนให้ก่อนนะ";
+  }
+
+  return "AI ยังตอบไม่ได้ เลยจัดชุดสำรองตามหมวดและโทนให้ก่อนนะ";
 }

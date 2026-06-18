@@ -36,6 +36,7 @@ npm.cmd install
 
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
 API key จะถูกใช้เฉพาะฝั่ง server ใน `app/api/generate-thread/route.ts` และไม่ถูกส่งไป client

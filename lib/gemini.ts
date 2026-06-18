@@ -85,6 +85,12 @@ const responseSchema = {
   ],
 };
 
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
+
+function getGeminiModel() {
+  return process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+}
+
 export const fallbackResult: ThreadResult = {
   imageMood:
     "ภาพนี้ให้ความรู้สึกนิ่ง อบอุ่น และมีจังหวะให้กลับมาอยู่กับตัวเอง เหมาะกับคอนเทนต์ที่อยากให้คนหยุดอ่านสั้น ๆ",
@@ -345,6 +351,8 @@ export async function generateThreadWithGemini({
 
 กติกา:
 - ใช้ภาษาไทยเป็นหลัก และให้เหมือนคนไทยเขียน Reels จริง
+- ทุก field หลักต้องเป็นภาษาไทย รวมถึง imageMood, contentAngle, captions, overlayThreads, hashtags, musicMatch.mood, musicMatch.whyItFits, songSuggestions.reason และ bestPick.reason
+- อนุญาตให้มีภาษาอังกฤษได้เฉพาะชื่อเพลง ชื่อศิลปิน และ songKeywords
 - overlayThreads ต้องมี exactly 5 items
 - captions ต้องมี exactly 3 items
 - captions ในแอปนี้หมายถึง "เธรด/คำบนคลิป" ไม่ใช่แคปชั่นบรรยายโพสต์ยาว ๆ
@@ -378,7 +386,7 @@ export async function generateThreadWithGemini({
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: getGeminiModel(),
     contents: [
       {
         role: "user",
@@ -432,6 +440,7 @@ export async function generateThreadWithoutImage({
 
 กติกา:
 - captions ในแอปนี้หมายถึง "เธรด/คำบนคลิป" ไม่ใช่แคปชั่นบรรยายโพสต์ยาว ๆ
+- ทุก field หลักต้องเป็นภาษาไทย ยกเว้นชื่อเพลง ชื่อศิลปิน และ songKeywords
 - captions ต้องเป็นคำคม ข้อคิด คำสอน ความรู้สึก หรือ mindset ที่นิยมใน IG Reels
 - captions ใช้เป็นข้อความบนคลิปหรือใต้คลิปทันที อ่านแล้วรู้สึกว่า "จริง", "เคยเป็น", "ต้องแชร์"
 - captions ต้องมี exactly 3 items สั้น กระชับ มี punchline หรือ insight ชัด ไม่เกิน 1-3 บรรทัด
@@ -445,7 +454,7 @@ export async function generateThreadWithoutImage({
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: getGeminiModel(),
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -502,13 +511,14 @@ export async function generateThreadLoose({
 }
 
 captions คือเธรด/คำบนคลิปแบบคำคม ข้อคิด คำสอน หรือ mindset ที่คนไทยนิยมใน IG Reels
+ทุก field หลักต้องเป็นภาษาไทย ยกเว้นชื่อเพลง ชื่อศิลปิน และ songKeywords
 bestPick.caption ต้องเป็นข้อความหลักสำหรับใช้บนคลิป / ใต้คลิป
 hashtags ต้องแมส ๆ กว้าง ๆ เพื่อ reach
 เพลงต้องฟีลตามกระแส Reels/TikTok แต่ไม่ต้องอ้างว่า realtime trending
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: getGeminiModel(),
     contents: prompt,
     config: {
       responseMimeType: "application/json",
