@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, type GenerateContentParameters } from "@google/genai";
 import type { ThreadResult } from "@/types/thread";
 
 type GenerateThreadInput = {
@@ -86,9 +86,42 @@ const responseSchema = {
 };
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+const FALLBACK_GEMINI_MODELS = [
+  DEFAULT_GEMINI_MODEL,
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+];
 
 function getGeminiModel() {
   return process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+}
+
+async function generateContentWithModelFallback(
+  ai: GoogleGenAI,
+  params: Omit<GenerateContentParameters, "model">,
+) {
+  const models = Array.from(new Set([getGeminiModel(), ...FALLBACK_GEMINI_MODELS]));
+  let lastError: unknown;
+
+  for (const model of models) {
+    try {
+      return await ai.models.generateContent({ ...params, model });
+    } catch (error) {
+      lastError = error;
+
+      if (!isRetryableModelError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+function isRetryableModelError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  return /404|NOT_FOUND|429|RESOURCE_EXHAUSTED|quota|rate/i.test(message);
 }
 
 export const fallbackResult: ThreadResult = {
@@ -385,8 +418,7 @@ export async function generateThreadWithGemini({
 ตอบเป็น JSON เท่านั้น ห้ามมี markdown หรือคำอธิบายนอก JSON
 `;
 
-  const response = await ai.models.generateContent({
-    model: getGeminiModel(),
+  const response = await generateContentWithModelFallback(ai, {
     contents: [
       {
         role: "user",
@@ -453,8 +485,7 @@ export async function generateThreadWithoutImage({
 - ต้องทำให้ overlayThreads, captions, bestPick.caption, musicMatch.mood และเหตุผลของเพลงสะท้อนโทน "${tone}" อย่างชัดเจน
 `;
 
-  const response = await ai.models.generateContent({
-    model: getGeminiModel(),
+  const response = await generateContentWithModelFallback(ai, {
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -517,8 +548,7 @@ hashtags ต้องแมส ๆ กว้าง ๆ เพื่อ reach
 เพลงต้องฟีลตามกระแส Reels/TikTok แต่ไม่ต้องอ้างว่า realtime trending
 `;
 
-  const response = await ai.models.generateContent({
-    model: getGeminiModel(),
+  const response = await generateContentWithModelFallback(ai, {
     contents: prompt,
     config: {
       responseMimeType: "application/json",
