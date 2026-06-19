@@ -143,10 +143,10 @@ export const fallbackResult: ThreadResult = {
   ],
   hashtags: [
     "#reelsไทย",
+    "#viralreels",
+    "#fyp",
+    "#เธรดความรู้สึก",
     "#ฮีลใจ",
-    "#ชีวิตประจำวัน",
-    "#แคปชั่นไทย",
-    "#ใจดีกับตัวเอง",
   ],
   musicMatch: {
     mood: "เพลงไทยละมุน ๆ ฟังสบาย มีความเหงาเล็กน้อยแต่ไม่หม่น",
@@ -202,7 +202,7 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
         "เหนื่อยก็พักได้ แต่อย่าลืมกลับมาพาตัวเองไปต่อ",
         "ทุกก้าวไม่ได้เปลี่ยนโลก แต่เปลี่ยนใจเราให้แข็งแรงขึ้นได้",
       ],
-      hashtags: ["#reelsไทย", "#วิ่งไหนดี", "#runningmotivation", "#ฮีลใจ", "#ออกกำลังกาย"],
+      hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#runningmotivation", "#วิ่งไหนดี"],
       musicMatch: {
         mood: "เพลงจังหวะกลาง ๆ มีพลังบวก ฟังแล้วอยากก้าวต่อ",
         whyItFits:
@@ -250,7 +250,7 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
         "คิดถึงเขาได้ แต่อย่าลืมคิดถึงตัวเองด้วย",
         "บางการจากลาไม่ได้ทำให้เราแพ้ แค่ทำให้เรารู้ว่าควรรักตัวเองยังไง",
       ],
-      hashtags: ["#เธรดความรู้สึก", "#อกหัก", "#ฮีลใจ", "#reelsไทย", "#รักตัวเอง"],
+      hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#เธรดความรู้สึก", "#อกหัก"],
       musicMatch: {
         mood: "เพลงเศร้านิด ๆ แต่ยังสวยและไม่ดาร์กเกินไป",
         whyItFits:
@@ -298,7 +298,7 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
         "ถ้ายังหาคำตอบไม่ได้ ลองปล่อยให้วันนี้ค่อย ๆ ผ่านไปก่อนก็ได้",
         "เราไม่จำเป็นต้องเข้าใจทุกอย่างในวันที่ยังเหนื่อย",
       ],
-      hashtags: ["#ท้องฟ้า", "#sunsetvibes", "#aestheticreels", "#ฮีลใจ", "#reelsไทย"],
+      hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#aestheticreels", "#ท้องฟ้า"],
       musicMatch: {
         mood: "เพลงละมุน ฟุ้ง ๆ เหมาะกับภาพฟ้าและช่วงเย็น",
         whyItFits:
@@ -343,7 +343,7 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
         ]
       : fallbackResult.captions,
     hashtags: isPlayful
-      ? ["#reelsไทย", "#ชีวิตประจำวัน", "#กวนๆ", "#moodoftheday", "#viralreels"]
+      ? ["#reelsไทย", "#viralreels", "#fyp", "#ชีวิตประจำวัน", "#กวนๆ"]
       : fallbackResult.hashtags,
     bestPick: isPlayful
       ? {
@@ -397,7 +397,8 @@ export async function generateThreadWithGemini({
 - bestPick.caption ต้องเลือก caption ที่ strongest ที่สุดสำหรับใช้เป็นข้อความบนคลิป / ใต้คลิป
 - hashtags ต้องมี exactly 5 items และเป็น broad hashtag เพื่อ reach
 - hashtags ต้องเป็นแนวแมส ๆ กว้าง ๆ มีโอกาส reach ดี เหมาะกับ Reels ไทย
-- hashtags ควรผสม hashtag ทั่วไปกับ hashtag ตาม mood/category เช่น reels, viral, mood, lifestyle, running, cafe, healing
+- hashtags ต้องมีแกนแมสอย่างน้อย 3 ตัวจากกลุ่มนี้: #reelsไทย, #viralreels, #fyp, #tiktokพาเพลิน, #เธรดความรู้สึก, #aestheticreels
+- hashtags ที่เหลือค่อยเติมตาม mood/category เช่น running, cafe, healing, sky, heartbreak
 - หลีกเลี่ยง hashtag แคบเกินไป ยาวเกินไป หรือ hashtag ชื่อเพลง
 - musicMatch.songKeywords ต้องมี exactly 3 items
 - musicMatch.songSuggestions ต้องมี exactly 3 items
@@ -477,7 +478,7 @@ export async function generateThreadWithoutImage({
 - captions ใช้เป็นข้อความบนคลิปหรือใต้คลิปทันที อ่านแล้วรู้สึกว่า "จริง", "เคยเป็น", "ต้องแชร์"
 - captions ต้องมี exactly 3 items สั้น กระชับ มี punchline หรือ insight ชัด ไม่เกิน 1-3 บรรทัด
 - overlayThreads ต้องมี exactly 5 items และอ่านทันใน 1-2 วินาที
-- hashtags ต้องมี exactly 5 items เป็นแนวแมส ๆ กว้าง ๆ เพื่อ reach
+- hashtags ต้องมี exactly 5 items เป็นแนวแมส ๆ กว้าง ๆ เพื่อ reach และต้องมี #reelsไทย, #viralreels, #fyp อย่างน้อย 3 ตัว
 - musicMatch.songKeywords ต้องมี exactly 3 items
 - musicMatch.songSuggestions ต้องมี exactly 3 items และให้ฟีลตามกระแส Instagram Reels/TikTok มากขึ้น แต่ไม่อ้างว่า realtime trending
 - หลีกเลี่ยงเพลงเดิม ๆ ที่เจอบ่อยเกินไป เช่น "ปล่อย", "ทางของฝุ่น", "ยินดี" เว้นแต่จำเป็นจริง ๆ
@@ -544,7 +545,7 @@ export async function generateThreadLoose({
 captions คือเธรด/คำบนคลิปแบบคำคม ข้อคิด คำสอน หรือ mindset ที่คนไทยนิยมใน IG Reels
 ทุก field หลักต้องเป็นภาษาไทย ยกเว้นชื่อเพลง ชื่อศิลปิน และ songKeywords
 bestPick.caption ต้องเป็นข้อความหลักสำหรับใช้บนคลิป / ใต้คลิป
-hashtags ต้องแมส ๆ กว้าง ๆ เพื่อ reach
+hashtags ต้องแมส ๆ กว้าง ๆ เพื่อ reach และต้องมี #reelsไทย, #viralreels, #fyp อย่างน้อย 3 ตัว
 เพลงต้องฟีลตามกระแส Reels/TikTok แต่ไม่ต้องอ้างว่า realtime trending
 `;
 
@@ -632,12 +633,20 @@ function fixedHashtags(
   fallback: string[],
   length: number,
 ): string[] {
+  const massCore = ["#reelsไทย", "#viralreels", "#fyp"];
+  const broadPool = [
+    "#เธรดความรู้สึก",
+    "#aestheticreels",
+    "#ฮีลใจ",
+    "#ชีวิตประจำวัน",
+    "#moodoftheday",
+  ];
   const items = fixedStrings(value, fallback, length * 2)
     .map((item) => item.replace(/\s+/g, ""))
     .map((item) => (item.startsWith("#") ? item : `#${item}`));
-  const unique = Array.from(new Set(items));
+  const unique = Array.from(new Set([...massCore, ...items, ...fallback, ...broadPool]));
 
-  return [...unique, ...fallback].slice(0, length);
+  return unique.slice(0, length);
 }
 
 function getToneGuidance(tone: string): string {
