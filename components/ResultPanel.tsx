@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { ThreadResult } from "@/types/thread";
 import { BestPickCard } from "./BestPickCard";
@@ -22,6 +23,14 @@ export function ResultPanel({
   onRegenerate,
   disabled,
 }: ResultPanelProps) {
+  const [copiedHero, setCopiedHero] = useState(false);
+
+  function handleCopyHero() {
+    navigator.clipboard.writeText(`${result.bestPick.overlay}\n\n${result.bestPick.caption}`);
+    setCopiedHero(true);
+    setTimeout(() => setCopiedHero(false), 2000);
+  }
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -34,6 +43,36 @@ export function ResultPanel({
           {fallbackMessage ?? "AI สะดุดนิดหน่อย เลยแสดงชุดไอเดียสำรองให้ก่อนนะ"}
         </div>
       ) : null}
+
+      {/* Hero Result Section */}
+      <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-md space-y-4 border border-slate-800">
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-300 border border-sky-500/30">
+            🌟 ประโยคที่แนะนำสุด
+          </span>
+        </div>
+        <div className="space-y-3">
+          <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
+            <span className="text-xs font-semibold text-slate-400">คำบนคลิป (Overlay)</span>
+            <p className="mt-1.5 whitespace-pre-line text-lg font-bold leading-8 text-sky-200">
+              {result.bestPick.overlay}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
+            <span className="text-xs font-semibold text-slate-400">คำใต้คลิป / แคปชั่น (Caption)</span>
+            <p className="mt-1.5 text-sm leading-6 text-slate-200">
+              {result.bestPick.caption}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleCopyHero}
+          className="w-full rounded-2xl bg-sky-500 hover:bg-sky-400 py-3 text-sm font-semibold text-slate-950 shadow-sm transition active:scale-[0.98] cursor-pointer"
+        >
+          {copiedHero ? "คัดลอกสำเร็จ! ✓" : "คัดลอกชุดแนะนำ"}
+        </button>
+      </section>
 
       <ReadySummary result={result} />
 
@@ -102,7 +141,7 @@ function ListSection({ title, subtitle, items, preserveLines }: ListSectionProps
               <span className="text-xs font-semibold text-slate-400">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <CopyButton value={item} label="คัดลอกอันนี้" />
+              <CopyButton value={item} label="คัดลอกแผ่นนี้" variant="minimal" />
             </div>
             <p className={`leading-7 text-slate-900 ${preserveLines ? "whitespace-pre-line" : ""}`}>
               {item}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import type { PhotoPickResult } from "@/types/thread";
@@ -28,9 +29,32 @@ export function PhotoPickResultPanel({
   onRegenerate,
   disabled,
 }: PhotoPickResultPanelProps) {
+  const [copiedHero, setCopiedHero] = useState(false);
+
   // Safe helper to get image preview URL from 1-based index
   const getImgUrl = (idx: number) => {
     return images[idx - 1]?.previewUrl || "";
+  };
+
+  const bestRank = result.rankedPhotos.find((p) => p.index === result.bestPhotoIndex);
+
+  function handleCopyHero() {
+    const textToCopy = `แนะนำให้ลง: รูป ${result.bestPhotoIndex}\nเหตุผล: ${result.bestPhotoReason}\nการใช้งาน: ${bestRank?.suggestedUse || "รูปเด่นหลัก"}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedHero(true);
+    setTimeout(() => setCopiedHero(false), 2000);
+  }
+
+  const getStoryLabel = (index: number, total: number) => {
+    if (index === 0) return "เปิดเรื่อง 🎬";
+    if (index === total - 1) return "ปิดท้าย 🏁";
+    return "เล่าบรรยากาศ 📖";
+  };
+
+  const getFeedLabel = (index: number, total: number) => {
+    if (index === 0) return "รูปปก 📌";
+    if (index === total - 1) return "รูปปิด 🔚";
+    return "รูปต่อไป ➔";
   };
 
   return (
@@ -46,45 +70,63 @@ export function PhotoPickResultPanel({
         </div>
       ) : null}
 
+      {/* Hero Result Section */}
+      <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-md space-y-4 border border-slate-800">
+        <div className="flex items-center justify-between">
+          <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-300 border border-amber-500/30">
+            👑 แนะนำให้ลง
+          </span>
+          <span className="text-lg font-bold text-amber-400">รูป {result.bestPhotoIndex}</span>
+        </div>
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          {getImgUrl(result.bestPhotoIndex) ? (
+            <div className="relative aspect-square w-full max-w-[140px] overflow-hidden rounded-2xl border border-slate-800 shadow-sm shrink-0 mx-auto sm:mx-0">
+              <Image
+                src={getImgUrl(result.bestPhotoIndex)}
+                alt="รูปแนะนำสูงสุด"
+                fill
+                className="object-cover"
+                sizes="140px"
+              />
+            </div>
+          ) : null}
+
+          <div className="flex-1 space-y-3">
+            <div className="rounded-2xl bg-white/5 p-3.5 border border-white/5">
+              <span className="text-xs font-semibold text-slate-400">การใช้งานที่แนะนำ</span>
+              <p className="mt-1 text-sm font-semibold text-sky-200">
+                {bestRank?.suggestedUse || "รูปเปิดเรื่องหรือหน้าปกหลัก"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white/5 p-3.5 border border-white/5">
+              <span className="text-xs font-semibold text-slate-400">เหตุผลที่เลือกรูปนี้</span>
+              <p className="mt-1 text-xs leading-5 text-slate-300">
+                {result.bestPhotoReason}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleCopyHero}
+          className="w-full rounded-2xl bg-amber-500 hover:bg-amber-400 py-3 text-sm font-semibold text-slate-950 shadow-sm transition active:scale-[0.98] cursor-pointer"
+        >
+          {copiedHero ? "คัดลอกสำเร็จ! ✓" : "คัดลอกคำแนะนำ"}
+        </button>
+      </section>
+
       {/* Mood Summary Card */}
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-slate-950">วิเคราะห์ Mood ภาพรวม</h2>
-            <p className="mt-2 text-base leading-7 text-slate-700 font-medium">
+            <h2 className="text-base font-bold text-slate-950">วิเคราะห์ Mood ภาพรวม</h2>
+            <p className="mt-2 text-sm leading-7 text-slate-700 font-medium">
               {result.moodSummary}
             </p>
           </div>
           <CopyButton value={result.moodSummary} />
-        </div>
-      </section>
-
-      {/* Best Pick Section */}
-      <section className="rounded-3xl border border-sky-100 bg-sky-50/50 p-5 shadow-sm ring-1 ring-sky-100">
-        <h2 className="text-base font-bold text-sky-950 flex items-center gap-2">
-          ✨ รูปที่ดีที่สุดสำหรับ {platform}
-        </h2>
-        
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-          {getImgUrl(result.bestPhotoIndex) ? (
-            <div className="relative aspect-square w-full max-w-[160px] overflow-hidden rounded-2xl border border-sky-200 shadow-sm shrink-0 mx-auto sm:mx-0">
-              <Image
-                src={getImgUrl(result.bestPhotoIndex)}
-                alt="รูปที่ดีที่สุด"
-                fill
-                className="object-cover"
-                sizes="160px"
-              />
-              <div className="absolute top-2 left-2 rounded-lg bg-sky-600 px-2 py-0.5 text-xs font-bold text-white">
-                รูป {result.bestPhotoIndex}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex-1 space-y-2">
-            <h3 className="font-semibold text-sky-900 text-sm sm:text-base">เหตุผลที่ AI เลือกรูปนี้</h3>
-            <p className="text-sm leading-6 text-slate-700">{result.bestPhotoReason}</p>
-          </div>
         </div>
       </section>
 
@@ -98,14 +140,14 @@ export function PhotoPickResultPanel({
               className="flex flex-col rounded-2xl bg-slate-50 p-3 relative border border-slate-100"
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="grid size-6 place-items-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
+                <span className="grid size-6 place-items-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-700">
                   {idx + 1}
                 </span>
-                <span className="text-xs font-bold text-slate-500">
-                  รูป {item.index}
+                <span className="text-xs font-bold text-slate-700">
+                  อันดับ {idx + 1} (รูป {item.index})
                 </span>
-                <span className="ml-auto rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-800">
-                  {item.score}/10 คะแนน
+                <span className="ml-auto rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-850">
+                  {item.score}/10
                 </span>
               </div>
 
@@ -121,7 +163,7 @@ export function PhotoPickResultPanel({
                 </div>
               ) : null}
 
-              <p className="text-xs text-slate-600 leading-5 mt-1 flex-1">{item.suggestedUse}</p>
+              <p className="text-xs text-slate-650 leading-5 mt-1 flex-1">{item.suggestedUse}</p>
             </div>
           ))}
         </div>
@@ -136,7 +178,7 @@ export function PhotoPickResultPanel({
           <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
             {result.storySequence.map((step, idx) => (
               <div key={`story-step-${idx}`} className="flex items-start gap-4 relative">
-                <div className="grid size-10 place-items-center rounded-full bg-slate-100 text-sm font-bold text-slate-700 border-2 border-white shadow-sm shrink-0">
+                <div className="grid size-10 place-items-center rounded-full bg-slate-100 text-sm font-bold text-slate-750 border-2 border-white shadow-sm shrink-0">
                   {idx + 1}
                 </div>
                 
@@ -156,13 +198,18 @@ export function PhotoPickResultPanel({
                     </div>
                   ) : null}
                   <div className="flex-1 space-y-1">
-                    <span className="text-xs font-semibold text-slate-400">คำทรานซิชัน / คำแปะ Story</span>
+                    <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1.5">
+                      <span>สไลด์ที่ {idx + 1}</span>
+                      <span className="rounded bg-sky-50 px-1 py-0.2 text-[9px] font-semibold text-sky-700">
+                        {getStoryLabel(idx, result.storySequence!.length)}
+                      </span>
+                    </span>
                     <p className="text-sm font-medium text-slate-800 leading-relaxed italic">
                       &ldquo;{step.transitionText}&rdquo;
                     </p>
                   </div>
-                  <div className="self-center sm:self-start">
-                    <CopyButton value={step.transitionText} label="คัดลอกคำแปะ" />
+                  <div className="self-center sm:self-start shrink-0">
+                    <CopyButton value={step.transitionText} label="คัดลอกคำแปะ" variant="minimal" />
                   </div>
                 </div>
               </div>
@@ -184,24 +231,29 @@ export function PhotoPickResultPanel({
             <div className="flex flex-wrap items-center gap-3">
               {result.feedOrder.map((photoIdx, idx) => (
                 <div key={`feed-step-${idx}`} className="flex items-center gap-2">
-                  <div className="flex flex-col items-center gap-1 rounded-2xl bg-slate-50 p-2 border border-slate-100 shadow-sm">
+                  <div className="flex flex-col items-center gap-1 rounded-2xl bg-slate-50 p-2 border border-slate-100 shadow-sm min-w-[76px]">
                     {getImgUrl(photoIdx) ? (
-                      <div className="relative aspect-square w-16 overflow-hidden rounded-xl border border-slate-200">
+                      <div className="relative aspect-square w-14 overflow-hidden rounded-xl border border-slate-200">
                         <Image
                           src={getImgUrl(photoIdx)}
                           alt={`Feed slot ${idx + 1}`}
                           fill
                           className="object-cover"
-                          sizes="64px"
+                          sizes="56px"
                         />
                         {photoIdx === (result.coverIndex ?? result.bestPhotoIndex) ? (
-                          <div className="absolute top-1 left-1 rounded bg-amber-500 px-1 py-0.2 text-[8px] font-bold text-white">
+                          <div className="absolute top-0.5 left-0.5 rounded bg-amber-500 px-1 py-0.2 text-[8px] font-bold text-white">
                             ปก
                           </div>
                         ) : null}
                       </div>
                     ) : null}
-                    <span className="text-[10px] font-semibold text-slate-500">ลำดับที่ {idx + 1} (รูป {photoIdx})</span>
+                    <span className="text-[9px] font-semibold text-slate-400 mt-1">
+                      {getFeedLabel(idx, result.feedOrder!.length)}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-750 mt-0.5">
+                      รูป {photoIdx}
+                    </span>
                   </div>
                   
                   {idx < (result.feedOrder?.length ?? 0) - 1 ? (
@@ -254,7 +306,7 @@ export function PhotoPickResultPanel({
       {result.skipPhotos && result.skipPhotos.length > 0 ? (
         <section className="rounded-3xl border border-amber-100 bg-amber-50/20 p-5 shadow-sm space-y-3">
           <h2 className="text-sm font-bold text-amber-800 flex items-center gap-1.5">
-            ⚠️ รูปภาพที่แนะนำให้ข้ามหรือไม่ลง (หากทำได้)
+            ⚠️ รูปภาพที่แนะนำให้ข้าม / ข้ามได้
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {result.skipPhotos.map((item, idx) => (
@@ -277,8 +329,10 @@ export function PhotoPickResultPanel({
                   </div>
                 ) : null}
                 <div className="flex-1 space-y-1">
-                  <span className="text-[10px] font-bold text-amber-700">รูปที่ {item.index}</span>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">{item.reason}</p>
+                  <span className="text-[9px] rounded bg-red-55/70 px-1.5 py-0.5 font-bold text-red-600 border border-red-100 inline-block">
+                    ข้ามได้ (ไม่จำเป็นต้องลง)
+                  </span>
+                  <p className="text-xs text-slate-650 leading-relaxed font-normal mt-1">{item.reason}</p>
                 </div>
               </div>
             ))}

@@ -121,15 +121,31 @@ const mockPhotoPickResult: PhotoPickResult = {
 function DemoContent() {
   const searchParams = useSearchParams();
   const state = searchParams.get("state") || "thread-upload";
+  const cleanParam = searchParams.get("clean") === "1";
+  const controlsParam = searchParams.get("controls") === "hidden";
+  const isCleanMode = cleanParam || controlsParam;
+
   const [showControls, setShowControls] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  const buildLink = (targetState: string) => {
+    let url = `/demo?state=${targetState}`;
+    if (cleanParam) url += "&clean=1";
+    if (controlsParam) url += "&controls=hidden";
+    return url;
+  };
 
   // Set standard HTML mode
   const mode = state.startsWith("photo-picker") ? "picker" : "thread";
 
-  // Safe mock files (only instantiated in browser context to prevent SSR problems)
-  const mockFile = typeof window !== "undefined" ? new File([], "demo1.png") : null;
+  // Safe mock files (only instantiated in browser context after mount to prevent SSR hydration mismatch)
+  const mockFile = hasMounted ? new File([], "demo1.png") : null;
 
-  const mockImages: UploadedImage[] = typeof window !== "undefined" ? [
+  const mockImages: UploadedImage[] = hasMounted ? [
     { id: "1", file: new File([], "demo1.png"), previewUrl: "/demo/demo1.svg" },
     { id: "2", file: new File([], "demo2.png"), previewUrl: "/demo/demo2.svg" },
     { id: "3", file: new File([], "demo3.png"), previewUrl: "/demo/demo3.svg" },
@@ -137,6 +153,7 @@ function DemoContent() {
     { id: "5", file: new File([], "demo5.png"), previewUrl: "/demo/demo5.svg" },
     { id: "6", file: new File([], "demo6.png"), previewUrl: "/demo/demo6.svg" }
   ] : [];
+
 
   // Setup state overrides
   let image: File | null = null;
@@ -210,12 +227,14 @@ function DemoContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfaf7] px-4 py-5 text-slate-950 sm:px-6 pb-28">
+    <main className={`min-h-screen bg-[#fbfaf7] px-4 py-5 text-slate-950 sm:px-6 ${isCleanMode ? "pb-10" : "pb-28"}`}>
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 lg:grid lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
         <div className="space-y-5 lg:sticky lg:top-6">
-          <div className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-block shadow-sm">
-            ⚙️ DEMO MODE SCREENSHOT STATE: {state}
-          </div>
+          {!isCleanMode && (
+            <div className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-block shadow-sm">
+              ⚙️ DEMO MODE SCREENSHOT STATE: {state}
+            </div>
+          )}
           <Hero />
 
           {/* Mode Switcher */}
@@ -322,7 +341,7 @@ function DemoContent() {
       </div>
 
       {/* Floating Eye Button to show controls when hidden */}
-      {!showControls && (
+      {!isCleanMode && !showControls && (
         <button
           type="button"
           onClick={() => setShowControls(true)}
@@ -334,13 +353,13 @@ function DemoContent() {
       )}
 
       {/* Floating Demo Navigation Control Panel */}
-      {showControls && (
+      {!isCleanMode && showControls && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/90 text-white p-3 border-t border-slate-700 backdrop-blur-md flex flex-wrap items-center justify-center gap-2 select-none print:hidden shadow-2xl">
           <span className="text-xs font-bold text-slate-400 mr-2 flex items-center gap-1">
             💻 Demo States:
           </span>
           <a
-            href="/demo?state=thread-upload"
+            href={buildLink("thread-upload")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "thread-upload" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -348,7 +367,7 @@ function DemoContent() {
             Thread Upload
           </a>
           <a
-            href="/demo?state=thread-preview"
+            href={buildLink("thread-preview")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "thread-preview" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -356,7 +375,7 @@ function DemoContent() {
             Thread Preview
           </a>
           <a
-            href="/demo?state=thread-loading"
+            href={buildLink("thread-loading")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "thread-loading" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -364,7 +383,7 @@ function DemoContent() {
             Thread Loading
           </a>
           <a
-            href="/demo?state=thread-result"
+            href={buildLink("thread-result")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "thread-result" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -372,7 +391,7 @@ function DemoContent() {
             Thread Result
           </a>
           <a
-            href="/demo?state=thread-error"
+            href={buildLink("thread-error")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "thread-error" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -383,7 +402,7 @@ function DemoContent() {
           <div className="w-px h-6 bg-slate-700 mx-2" />
 
           <a
-            href="/demo?state=photo-picker-upload"
+            href={buildLink("photo-picker-upload")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "photo-picker-upload" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -391,7 +410,7 @@ function DemoContent() {
             Picker Upload
           </a>
           <a
-            href="/demo?state=photo-picker-preview"
+            href={buildLink("photo-picker-preview")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "photo-picker-preview" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -399,7 +418,7 @@ function DemoContent() {
             Picker Preview
           </a>
           <a
-            href="/demo?state=photo-picker-loading"
+            href={buildLink("photo-picker-loading")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "photo-picker-loading" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -407,7 +426,7 @@ function DemoContent() {
             Picker Loading
           </a>
           <a
-            href="/demo?state=photo-picker-result"
+            href={buildLink("photo-picker-result")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "photo-picker-result" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}
@@ -415,7 +434,7 @@ function DemoContent() {
             Picker Result
           </a>
           <a
-            href="/demo?state=photo-picker-error"
+            href={buildLink("photo-picker-error")}
             className={`px-3 py-1.5 text-xs rounded-xl transition ${
               state === "photo-picker-error" ? "bg-sky-600 font-bold" : "bg-slate-800 hover:bg-slate-750"
             }`}

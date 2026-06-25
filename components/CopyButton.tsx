@@ -5,9 +5,10 @@ import { useState } from "react";
 type CopyButtonProps = {
   value: string;
   label?: string;
+  variant?: "default" | "minimal";
 };
 
-export function CopyButton({ value, label = "คัดลอก" }: CopyButtonProps) {
+export function CopyButton({ value, label = "คัดลอก", variant = "default" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -27,11 +28,23 @@ export function CopyButton({ value, label = "คัดลอก" }: CopyButtonPr
     }
   }
 
+  if (variant === "minimal") {
+    return (
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="text-[11px] font-semibold text-slate-400 hover:text-sky-600 transition bg-transparent border-0 cursor-pointer p-0 select-none"
+      >
+        {copied ? "คัดลอกแล้ว! ✓" : label === "คัดลอก" ? "คัดลอก 📋" : label}
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={handleCopy}
-      className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-sky-200 hover:text-sky-700 disabled:opacity-60"
+      className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-sky-200 hover:text-sky-700 disabled:opacity-60 cursor-pointer"
     >
       {copied ? "คัดลอกแล้ว" : label}
     </button>
