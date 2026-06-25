@@ -127,6 +127,7 @@ function DemoContent() {
 
   const [showControls, setShowControls] = useState(true);
   const [hasMounted, setHasMounted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
@@ -222,6 +223,8 @@ function DemoContent() {
     pickerErrors = { submit: "เกิดข้อผิดพลาดในการวิเคราะห์รูปภาพจากเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง" };
   }
 
+  const isSummaryShown = (mode === "thread" ? !!result : !!pickerResult) && !isEditing;
+
   function handleDemoSubmit() {
     alert("คุณอยู่ในโหมดทดลองจับภาพหน้าจอ (Demo Mode) กรุณาใช้แผงควบคุมด้านล่างเพื่อเลือกสถานะ");
   }
@@ -229,89 +232,162 @@ function DemoContent() {
   return (
     <main className={`min-h-screen bg-[#fbfaf7] px-4 py-5 text-slate-950 sm:px-6 ${isCleanMode ? "pb-10" : "pb-28"}`}>
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 lg:grid lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+        
+        {/* Left Column */}
         <div className="space-y-5 lg:sticky lg:top-6">
           {!isCleanMode && (
             <div className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-block shadow-sm">
               ⚙️ DEMO MODE SCREENSHOT STATE: {state}
             </div>
           )}
-          <Hero />
 
-          {/* Mode Switcher */}
-          <div className="flex rounded-2xl bg-white p-1.5 shadow-sm border border-slate-200 ring-1 ring-slate-100/50 pointer-events-none">
-            <div
-              className={`flex-1 rounded-xl py-3 text-sm font-semibold transition text-center ${
-                mode === "thread" ? "bg-slate-950 text-white shadow-sm" : "text-slate-400"
-              }`}
-            >
-              คิดเธรดจากรูป
-            </div>
-            <div
-              className={`flex-1 rounded-xl py-3 text-sm font-semibold transition text-center ${
-                mode === "picker" ? "bg-slate-950 text-white shadow-sm" : "text-slate-400"
-              }`}
-            >
-              เลือกรูปให้หน่อย
-            </div>
-          </div>
-
-          {mode === "thread" ? (
-            <ImageUploader
-              file={image}
-              previewUrl={previewUrl}
-              error={errors.image}
-              onChange={() => {}}
-            />
+          {isSummaryShown ? (
+            mode === "thread" ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  {previewUrl && (
+                    <div className="relative size-12 overflow-hidden rounded-xl border border-slate-100 shrink-0">
+                      <img src={previewUrl} alt="Thumbnail" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-[10px] font-bold text-sky-700 uppercase tracking-wider bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-100">
+                      คิดเธรดจากรูป
+                    </span>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-650 font-semibold flex-wrap">
+                      <span>หมวด: {category}</span>
+                      <span className="text-slate-350">•</span>
+                      <span>โทน: {tone}</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-xs whitespace-nowrap shrink-0 transition select-none"
+                >
+                  แก้ไขรูป/ตัวเลือก
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-4">
+                    {images.slice(0, 3).map((img, idx) => (
+                      <div key={img.id} className="relative size-10 overflow-hidden rounded-xl border-2 border-white shadow-sm shrink-0">
+                        <img src={img.previewUrl} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
+                      </div>
+                    ))}
+                    {images.length > 3 && (
+                      <div className="relative size-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-[10px] font-bold text-white z-10 select-none">
+                        +{images.length - 3}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
+                      เลือกรูปให้หน่อย ({images.length} รูป)
+                    </span>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-650 font-semibold flex-wrap">
+                      <span>แพลตฟอร์ม: {pickerPlatform}</span>
+                      <span className="text-slate-350">•</span>
+                      <span>Mood: {pickerMood}</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-xs whitespace-nowrap shrink-0 transition select-none"
+                >
+                  แก้ไขรูป/ตัวเลือก
+                </button>
+              </div>
+            )
           ) : (
-            <PhotoPickerUploader
-              images={images}
-              onChange={() => {}}
-              error={pickerErrors.images}
-              onError={() => {}}
-            />
+            <>
+              <Hero />
+
+              {/* Mode Switcher */}
+              <div className="flex rounded-2xl bg-white p-1.5 shadow-sm border border-slate-200 ring-1 ring-slate-100/50 pointer-events-none">
+                <div
+                  className={`flex-1 rounded-xl py-3 text-sm font-semibold transition text-center ${
+                    mode === "thread" ? "bg-slate-950 text-white shadow-sm" : "text-slate-400"
+                  }`}
+                >
+                  คิดเธรดจากรูป
+                </div>
+                <div
+                  className={`flex-1 rounded-xl py-3 text-sm font-semibold transition text-center ${
+                    mode === "picker" ? "bg-slate-950 text-white shadow-sm" : "text-slate-400"
+                  }`}
+                >
+                  เลือกรูปให้หน่อย
+                </div>
+              </div>
+
+              {mode === "thread" ? (
+                <ImageUploader
+                  file={image}
+                  previewUrl={previewUrl}
+                  error={errors.image}
+                  onChange={() => {}}
+                />
+              ) : (
+                <PhotoPickerUploader
+                  images={images}
+                  onChange={() => {}}
+                  error={pickerErrors.images}
+                  onError={() => {}}
+                />
+              )}
+            </>
           )}
         </div>
 
+        {/* Right Column */}
         <div className="space-y-4 pb-10 lg:pt-8">
-          {mode === "thread" ? (
-            <>
-              <CategorySelector value={category} onChange={() => {}} error={errors.category} />
-              <ToneSelector value={tone} onChange={() => {}} error={errors.tone} />
+          {!isSummaryShown ? (
+            mode === "thread" ? (
+              <>
+                <CategorySelector value={category} onChange={() => {}} error={errors.category} />
+                <ToneSelector value={tone} onChange={() => {}} error={errors.tone} />
 
-              {errors.submit ? (
-                <p className="rounded-2xl border border-red-100 bg-red-50 p-3 text-sm text-red-700 font-medium">
-                  {errors.submit}
-                </p>
-              ) : null}
+                {errors.submit ? (
+                  <p className="rounded-2xl border border-red-100 bg-red-50 p-3 text-sm text-red-700 font-medium">
+                    {errors.submit}
+                  </p>
+                ) : null}
 
-              <button
-                type="button"
-                onClick={handleDemoSubmit}
-                className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm cursor-pointer"
-              >
-                คิดเธรดให้หน่อย
-              </button>
-            </>
-          ) : (
-            <>
-              <PlatformSelector value={pickerPlatform} onChange={() => {}} error={pickerErrors.platform} />
-              <MoodSelector value={pickerMood} onChange={() => {}} error={pickerErrors.mood} />
+                <button
+                  type="button"
+                  onClick={handleDemoSubmit}
+                  className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm cursor-pointer"
+                >
+                  คิดเธรดให้หน่อย
+                </button>
+              </>
+            ) : (
+              <>
+                <PlatformSelector value={pickerPlatform} onChange={() => {}} error={pickerErrors.platform} />
+                <MoodSelector value={pickerMood} onChange={() => {}} error={pickerErrors.mood} />
 
-              {pickerErrors.submit ? (
-                <p className="rounded-2xl border border-red-100 bg-red-50 p-3 text-sm text-red-700 font-medium">
-                  {pickerErrors.submit}
-                </p>
-              ) : null}
+                {pickerErrors.submit ? (
+                  <p className="rounded-2xl border border-red-100 bg-red-50 p-3 text-sm text-red-700 font-medium">
+                    {pickerErrors.submit}
+                  </p>
+                ) : null}
 
-              <button
-                type="button"
-                onClick={handleDemoSubmit}
-                className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm cursor-pointer"
-              >
-                เลือกรูปให้หน่อย
-              </button>
-            </>
-          )}
+                <button
+                  type="button"
+                  onClick={handleDemoSubmit}
+                  className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm cursor-pointer"
+                >
+                  เลือกรูปให้หน่อย
+                </button>
+              </>
+            )
+          ) : null}
 
           {isLoading ? (
             <LoadingState
