@@ -84,6 +84,9 @@ export type PhotoPickResult = {
   coverIndex?: number;
   captionSuggestion?: string;
   hashtags?: string[];
+  totalUploaded?: number;
+  shortlistedCount?: number;
+  shortlistedIndices?: number[];
 };
 
 export type PickPhotosResponse = {

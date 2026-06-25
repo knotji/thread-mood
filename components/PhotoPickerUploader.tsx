@@ -8,7 +8,6 @@ type UploadedImage = {
   id: string;
   file: File;
   previewUrl: string;
-  selected: boolean;
 };
 
 type PhotoPickerUploaderProps = {
@@ -91,9 +90,6 @@ export function PhotoPickerUploader({
       let sizeError = false;
       let didAnyCompress = false;
 
-      const selectedCount = images.filter((img) => img.selected).length;
-      let currentSelectedCount = selectedCount;
-
       results.forEach(({ original, compressed }) => {
         if (compressed.size > MAX_IMAGE_SIZE) {
           sizeError = true;
@@ -101,15 +97,10 @@ export function PhotoPickerUploader({
           if (compressed.size < original.size) {
             didAnyCompress = true;
           }
-          const shouldSelect = currentSelectedCount < 6;
-          if (shouldSelect) {
-            currentSelectedCount++;
-          }
           validNewImages.push({
             id: Math.random().toString(36).substring(2, 9),
             file: compressed,
             previewUrl: URL.createObjectURL(compressed),
-            selected: shouldSelect,
           });
         }
       });
@@ -155,27 +146,7 @@ export function PhotoPickerUploader({
     onChange(updated);
   }
 
-  function handleToggleSelect(id: string) {
-    const target = images.find((img) => img.id === id);
-    if (!target) return;
 
-    if (!target.selected) {
-      const selectedCount = images.filter((img) => img.selected).length;
-      if (selectedCount >= 6) {
-        onError("เลือกวิเคราะห์ได้สูงสุด 6 รูป เพื่อให้ AI เลือกได้แม่นขึ้น");
-        return;
-      }
-    }
-
-    const updated = images.map((img) => {
-      if (img.id === id) {
-        return { ...img, selected: !img.selected };
-      }
-      return img;
-    });
-    onChange(updated);
-    onError(undefined);
-  }
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault();
@@ -188,15 +159,13 @@ export function PhotoPickerUploader({
     }
   }
 
-  const selectedCount = images.filter((img) => img.selected).length;
-
-  return (
+      return (
     <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h2 className="font-semibold text-slate-950">อัปโหลดเซตรูปภาพ</h2>
           <p className="mt-1 text-sm text-slate-500 font-normal">
-            เลือกรูปภาพ 2-20 รูปเพื่อจัดเรียง (และเลือกวิเคราะห์ 2-6 รูป)
+            อัปโหลดรูปภาพ 2-20 รูป เพื่อให้ AI เลือกและวิเคราะห์รูปที่ดีที่สุดให้
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -207,9 +176,6 @@ export function PhotoPickerUploader({
           )}
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
             อัปโหลดแล้ว {images.length}/{MAX_IMAGES} รูป
-          </span>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedCount >= 2 && selectedCount <= 6 ? "bg-sky-50 text-sky-700" : "bg-amber-50 text-amber-700"}`}>
-            เลือกวิเคราะห์ {selectedCount}/6 รูป
           </span>
         </div>
       </div>
@@ -223,12 +189,7 @@ export function PhotoPickerUploader({
           {images.map((img, index) => (
             <div
               key={img.id}
-              onClick={() => handleToggleSelect(img.id)}
-              className={`group relative aspect-square overflow-hidden rounded-2xl border transition cursor-pointer select-none shadow-xs ${
-                img.selected
-                  ? "border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/10"
-                  : "border-slate-200 bg-slate-50 opacity-60 hover:opacity-85"
-              }`}
+              className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-xs"
             >
               <Image
                 src={img.previewUrl}
@@ -237,31 +198,15 @@ export function PhotoPickerUploader({
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, 150px"
               />
-              
-              {!img.selected && (
-                <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[0.5px]" />
-              )}
 
               <div className="absolute top-2 left-2 rounded-lg bg-slate-950/80 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-[2px]">
                 รูป {index + 1}
               </div>
 
-              <div className="absolute bottom-2 left-2">
-                {img.selected ? (
-                  <span className="rounded-md bg-sky-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
-                    ✓ เลือกแล้ว
-                  </span>
-                ) : (
-                  <span className="rounded-md bg-slate-600/80 px-1.5 py-0.5 text-[10px] font-bold text-slate-100 shadow-xs backdrop-blur-[1px]">
-                    ยังไม่เลือก
-                  </span>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={(e) => handleRemove(e, img.id)}
-                className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-red-600/80 text-sm font-bold text-white shadow-sm transition hover:bg-red-700 hover:scale-105 focus:outline-none"
+                className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-red-600/80 text-sm font-bold text-white shadow-sm transition hover:bg-red-700 hover:scale-105 focus:outline-none z-10"
                 title="ลบรูปนี้"
               >
                 ✕

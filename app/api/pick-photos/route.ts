@@ -99,9 +99,15 @@ export async function POST(request: Request) {
     
     // Provide fallback
     if (selectedPlatform && selectedMood) {
-      const fallbackResult = createLocalPhotoPickFallback(selectedPlatform, selectedMood, indices);
+      const fallbackShortlist = indices.slice(0, 6);
+      const fallbackResult = createLocalPhotoPickFallback(selectedPlatform, selectedMood, fallbackShortlist);
       return NextResponse.json({
-        result: fallbackResult,
+        result: {
+          ...fallbackResult,
+          totalUploaded: indices.length,
+          shortlistedCount: fallbackShortlist.length,
+          shortlistedIndices: fallbackShortlist,
+        },
         fallback: true,
         error: "AI สะดุดนิดหน่อย เลยวิเคราะห์รูปให้ตามหมวดหมู่และ Mood สำรองแทนนะ",
       });

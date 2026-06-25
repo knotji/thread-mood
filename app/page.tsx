@@ -31,7 +31,6 @@ type UploadedImage = {
   id: string;
   file: File;
   previewUrl: string;
-  selected: boolean;
 };
 
 export default function Home() {
@@ -188,10 +187,9 @@ export default function Home() {
 
   async function handlePickPhotos() {
     const nextErrors: PickerErrors = {};
-    const selectedImages = images.filter((img) => img.selected);
 
-    if (selectedImages.length < 2 || selectedImages.length > 6) {
-      nextErrors.images = "กรุณาเลือกรูปภาพอย่างน้อย 2 รูป และไม่เกิน 6 รูปสำหรับวิเคราะห์นะ";
+    if (images.length < 2 || images.length > 20) {
+      nextErrors.images = "กรุณาอัปโหลดรูปภาพอย่างน้อย 2 รูป และไม่เกิน 20 รูปนะ";
     }
     if (!pickerPlatform) {
       nextErrors.platform = "กรุณาเลือกแพลตฟอร์มก่อนนะ";
@@ -210,14 +208,12 @@ export default function Home() {
 
     try {
       const formData = new FormData();
-      selectedImages.forEach((img) => {
+      images.forEach((img) => {
         formData.append("images", img.file);
       });
       
-      const selectedIndices = selectedImages.map((img) => {
-        return images.findIndex((x) => x.id === img.id) + 1;
-      });
-      formData.append("indices", selectedIndices.join(","));
+      const indices = images.map((_, idx) => idx + 1);
+      formData.append("indices", indices.join(","));
 
       formData.append("platform", pickerPlatform);
       formData.append("mood", pickerMood);
@@ -297,20 +293,29 @@ export default function Home() {
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-4">
-                    {images.filter((img) => img.selected).slice(0, 3).map((img, idx) => (
-                      <div key={img.id} className="relative size-10 overflow-hidden rounded-xl border-2 border-white shadow-sm shrink-0">
-                        <img src={img.previewUrl} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
-                      </div>
-                    ))}
-                    {images.filter((img) => img.selected).length > 3 && (
-                      <div className="relative size-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-[10px] font-bold text-white z-10 select-none">
-                        +{images.filter((img) => img.selected).length - 3}
-                      </div>
-                    )}
+                    {(() => {
+                      const shortlisted = pickerResult?.shortlistedIndices
+                        ? images.filter((_, idx) => pickerResult.shortlistedIndices?.includes(idx + 1))
+                        : images.slice(0, 6);
+                      return (
+                        <>
+                          {shortlisted.slice(0, 3).map((img, idx) => (
+                            <div key={img.id} className="relative size-10 overflow-hidden rounded-xl border-2 border-white shadow-sm shrink-0">
+                              <img src={img.previewUrl} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
+                            </div>
+                          ))}
+                          {shortlisted.length > 3 && (
+                            <div className="relative size-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-[10px] font-bold text-white z-10 select-none">
+                              +{shortlisted.length - 3}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-                      เลือกรูปให้หน่อย (วิเคราะห์ {images.filter((img) => img.selected).length}/{images.length} รูป)
+                      เลือกรูปให้หน่อย (AI คัดเหลือ {(pickerResult?.shortlistedIndices?.length ?? 0)}/{images.length} รูป)
                     </span>
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-semibold flex-wrap">
                       <span>แพลตฟอร์ม: {pickerPlatform}</span>
@@ -448,13 +453,9 @@ export default function Home() {
                   </p>
                 ) : null}
 
-                {images.filter((img) => img.selected).length < 2 ? (
+                {images.length < 2 ? (
                   <p className="text-xs text-slate-500 font-semibold mb-2">
-                    💡 เลือกอย่างน้อย 2 รูปเพื่อให้ AI เปรียบเทียบได้
-                  </p>
-                ) : images.filter((img) => img.selected).length === 6 ? (
-                  <p className="text-xs text-sky-700 font-semibold mb-2">
-                    ✨ เลือกครบ 6 รูปแล้ว ถ้าอยากเลือกรูปอื่น ให้เอาบางรูปออกก่อน
+                    💡 อัปโหลดอย่างน้อย 2 รูป เพื่อเริ่มการคัดสรรด้วย AI
                   </p>
                 ) : null}
 
@@ -462,8 +463,8 @@ export default function Home() {
                   type="button"
                   onClick={handlePickPhotos}
                   disabled={
-                    images.filter((img) => img.selected).length < 2 ||
-                    images.filter((img) => img.selected).length > 6 ||
+                    images.length < 2 ||
+                    images.length > 20 ||
                     isPickerCompressing ||
                     !pickerPlatform ||
                     !pickerMood ||
@@ -472,10 +473,10 @@ export default function Home() {
                   className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 cursor-pointer select-none"
                 >
                   {isLoading
-                    ? "กำลังเลือกรูปภาพให้อยู่…"
+                    ? "กำลังคัดและวิเคราะห์รูปภาพด้วย AI…"
                     : isPickerCompressing
                     ? "กำลังปรับขนาดรูป…"
-                    : "เลือกรูปให้หน่อย"}
+                    : "ให้ AI คัดและวิเคราะห์รูปให้"}
                 </button>
               </>
             )

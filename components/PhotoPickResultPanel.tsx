@@ -70,6 +70,42 @@ export function PhotoPickResultPanel({
         </div>
       ) : null}
 
+      {/* Shortlist Summary Card */}
+      {result.totalUploaded !== undefined && result.shortlistedCount !== undefined && (
+        <div className="rounded-3xl border border-sky-100 bg-sky-50/50 p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-xs font-bold text-sky-900 uppercase tracking-wider">📊 สรุปการคัดเลือกรูปภาพ</h3>
+            <span className="rounded-full bg-sky-100/80 border border-sky-200/50 px-3 py-1 text-xs font-bold text-sky-800">
+              AI คัดจาก {result.totalUploaded} รูป เหลือ {result.shortlistedCount} รูป
+            </span>
+          </div>
+          {result.shortlistedIndices && result.shortlistedIndices.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {result.shortlistedIndices.map((photoIdx) => {
+                const imgUrl = getImgUrl(photoIdx);
+                return (
+                  <div
+                    key={`shortlisted-thumb-${photoIdx}`}
+                    className="relative size-12 overflow-hidden rounded-xl border border-sky-200 shadow-xs shrink-0 hover:scale-105 transition"
+                  >
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={`รูปที่ ${photoIdx}`} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-sky-100 flex items-center justify-center text-[10px] font-bold text-sky-700">
+                        {photoIdx}
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-sky-600/90 text-[8px] font-bold text-white text-center py-0.5 select-none">
+                      รูป {photoIdx}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Hero Result Section */}
       <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-md space-y-4 border border-slate-800">
         <div className="flex items-center justify-between">
@@ -304,39 +340,47 @@ export function PhotoPickResultPanel({
 
       {/* Skip Photos Section (If any) */}
       {result.skipPhotos && result.skipPhotos.length > 0 ? (
-        <section className="rounded-3xl border border-amber-100 bg-amber-50/20 p-5 shadow-sm space-y-3">
-          <h2 className="text-sm font-bold text-amber-800 flex items-center gap-1.5">
-            ⚠️ รูปภาพที่แนะนำให้ข้าม / ข้ามได้
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {result.skipPhotos.map((item, idx) => (
-              <div
-                key={`skip-${idx}`}
-                className="flex gap-3 rounded-2xl bg-white border border-amber-100/60 p-3 shadow-xs"
-              >
-                {getImgUrl(item.index) ? (
-                  <div className="relative aspect-square w-12 overflow-hidden rounded-xl border border-slate-200 shrink-0 opacity-60 grayscale-[40%]">
-                    <Image
-                      src={getImgUrl(item.index)}
-                      alt={`Skip image ${item.index}`}
-                      fill
-                      className="object-cover"
-                      sizes="48px"
-                    />
-                    <div className="absolute top-0.5 left-0.5 rounded bg-red-500 px-1 py-0.2 text-[8px] font-bold text-white">
-                      รูป {item.index}
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-1">
+          <details className="group">
+            <summary className="flex items-center justify-between font-bold text-slate-800 cursor-pointer select-none focus:outline-none list-none [&::-webkit-details-marker]:hidden">
+              <span className="text-sm font-bold text-slate-850 flex items-center gap-1.5">
+                ⚠️ รูปภาพที่ไม่แนะนำให้ลง ({result.skipPhotos.length} รูป)
+              </span>
+              <span className="text-xs text-slate-400 font-semibold group-open:rotate-180 transition-transform">
+                ▼
+              </span>
+            </summary>
+
+            <div className="grid gap-3 sm:grid-cols-2 mt-4 pt-4 border-t border-slate-100">
+              {result.skipPhotos.map((item, idx) => (
+                <div
+                  key={`skip-${idx}`}
+                  className="flex gap-3 rounded-2xl bg-slate-50 border border-slate-100 p-3 shadow-xs"
+                >
+                  {getImgUrl(item.index) ? (
+                    <div className="relative aspect-square w-12 overflow-hidden rounded-xl border border-slate-200 shrink-0 opacity-60 grayscale-[40%]">
+                      <Image
+                        src={getImgUrl(item.index)}
+                        alt={`Skip image ${item.index}`}
+                        fill
+                        className="object-cover"
+                        sizes="48px"
+                      />
+                      <div className="absolute top-0.5 left-0.5 rounded bg-red-500 px-1 py-0.2 text-[8px] font-bold text-white">
+                        รูป {item.index}
+                      </div>
                     </div>
+                  ) : null}
+                  <div className="flex-1 space-y-1">
+                    <span className="text-[9px] rounded bg-red-50/70 px-1.5 py-0.5 font-bold text-red-600 border border-red-100 inline-block">
+                      ไม่แนะนำให้ลง
+                    </span>
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal mt-1">{item.reason}</p>
                   </div>
-                ) : null}
-                <div className="flex-1 space-y-1">
-                  <span className="text-[9px] rounded bg-red-50/70 px-1.5 py-0.5 font-bold text-red-600 border border-red-100 inline-block">
-                    ข้ามได้ (ไม่จำเป็นต้องลง)
-                  </span>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal mt-1">{item.reason}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </details>
         </section>
       ) : null}
 
