@@ -11,10 +11,11 @@ const loadingMessages = [
 
 type LoadingStateProps = {
   messageIndex: number;
+  message?: string;
 };
 
-export function LoadingState({ messageIndex }: LoadingStateProps) {
-  const message = loadingMessages[messageIndex % loadingMessages.length];
+export function LoadingState({ messageIndex, message: customMessage }: LoadingStateProps) {
+  const message = customMessage ?? loadingMessages[messageIndex % loadingMessages.length];
 
   return (
     <motion.div

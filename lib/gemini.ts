@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, type GenerateContentParameters } from "@google/genai";
-import type { ThreadResult } from "@/types/thread";
+import type { ThreadResult, PhotoPickResult } from "@/types/thread";
 
 type GenerateThreadInput = {
   imageBase64: string;
@@ -673,3 +673,247 @@ function getToneGuidance(tone: string): string {
 
   return guidance[tone] ?? "เขียนให้ตรงกับโทนที่ผู้ใช้เลือกอย่างชัดเจน";
 }
+
+type PickPhotosInput = {
+  images: { base64: string; mimeType: string }[];
+  platform: string;
+  mood: string;
+};
+
+const pickPhotosResponseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    moodSummary: { type: Type.STRING },
+    bestPhotoIndex: { type: Type.INTEGER },
+    bestPhotoReason: { type: Type.STRING },
+    rankedPhotos: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          index: { type: Type.INTEGER },
+          score: { type: Type.INTEGER },
+          suggestedUse: { type: Type.STRING },
+        },
+        required: ["index", "score", "suggestedUse"],
+      },
+    },
+    skipPhotos: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          index: { type: Type.INTEGER },
+          reason: { type: Type.STRING },
+        },
+        required: ["index", "reason"],
+      },
+    },
+    storySequence: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          index: { type: Type.INTEGER },
+          transitionText: { type: Type.STRING },
+        },
+        required: ["index", "transitionText"],
+      },
+    },
+    feedOrder: {
+      type: Type.ARRAY,
+      items: { type: Type.INTEGER },
+    },
+    coverIndex: { type: Type.INTEGER },
+    captionSuggestion: { type: Type.STRING },
+    hashtags: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+    },
+  },
+  required: [
+    "moodSummary",
+    "bestPhotoIndex",
+    "bestPhotoReason",
+    "rankedPhotos",
+    "skipPhotos",
+  ],
+};
+
+export function createLocalPhotoPickFallback(
+  platform: string,
+  mood: string,
+): PhotoPickResult {
+  return {
+    moodSummary: `รูปภาพเซตนี้เน้นอารมณ์แบบ ${mood} เหมาะมากสำหรับนำเสนอแนวชีวิตประจำวันและท่องเที่ยว`,
+    bestPhotoIndex: 1,
+    bestPhotoReason: `รูปที่ 1 มีองค์ประกอบและแสงที่ดึงดูดสายตาดีที่สุด เข้ากับ mood แบบ ${mood} ที่ต้องการ`,
+    rankedPhotos: [
+      { index: 1, score: 9, suggestedUse: "รูปเปิดเรื่องหรือจุดดึงสายตาแรก" },
+      { index: 2, score: 8, suggestedUse: "รูปเสริมอารมณ์ความรู้สึกหรือรายละเอียดเสริม" },
+    ],
+    skipPhotos: [],
+    ...(platform === "Story"
+      ? {
+          storySequence: [
+            { index: 1, transitionText: "เปิดเรื่องให้น่าติดตาม" },
+            { index: 2, transitionText: "เล่าบรรยากาศต่อ" },
+          ],
+        }
+      : {}),
+    ...(platform === "Feed"
+      ? {
+          feedOrder: [1, 2],
+          coverIndex: 1,
+        }
+      : {}),
+    captionSuggestion: `ปล่อยใจสบาย ๆ ในวันที่มีความสุข 🌿✨`,
+    hashtags: ["#reelsไทย", "#viralreels", "#fyp", `#${mood}`, "#เธรดความรู้สึก"],
+  };
+}
+
+function normalizePhotoPickResult(
+  value: unknown,
+  numImages: number,
+  platform: string,
+  mood: string,
+): PhotoPickResult {
+  const fallback = createLocalPhotoPickFallback(platform, mood);
+  const record = value as Partial<PhotoPickResult>;
+
+  // Ensure index is valid (between 1 and numImages)
+  const isValidIndex = (idx: unknown): boolean =>
+    typeof idx === "number" && idx >= 1 && idx <= numImages;
+
+  const bestPhotoIndex = isValidIndex(record.bestPhotoIndex)
+    ? (record.bestPhotoIndex as number)
+    : 1;
+
+  const rankedPhotos = Array.isArray(record.rankedPhotos)
+    ? record.rankedPhotos
+        .map((p) => {
+          const idx = typeof p?.index === "number" ? p.index : 1;
+          const score = typeof p?.score === "number" ? p.score : 8;
+          const suggestedUse = typeof p?.suggestedUse === "string" ? p.suggestedUse : "";
+          return { index: idx, score, suggestedUse };
+        })
+        .filter((p) => isValidIndex(p.index))
+    : fallback.rankedPhotos;
+
+  const skipPhotos = Array.isArray(record.skipPhotos)
+    ? record.skipPhotos
+        .map((p) => {
+          const idx = typeof p?.index === "number" ? p.index : 1;
+          const reason = typeof p?.reason === "string" ? p.reason : "";
+          return { index: idx, reason };
+        })
+        .filter((p) => isValidIndex(p.index))
+    : [];
+
+  const storySequence = Array.isArray(record.storySequence)
+    ? record.storySequence
+        .map((s) => {
+          const idx = typeof s?.index === "number" ? s.index : 1;
+          const transitionText =
+            typeof s?.transitionText === "string" ? s.transitionText : "";
+          return { index: idx, transitionText };
+        })
+        .filter((s) => isValidIndex(s.index))
+    : platform === "Story" ? fallback.storySequence : undefined;
+
+  const feedOrder = Array.isArray(record.feedOrder)
+    ? record.feedOrder.filter(isValidIndex)
+    : platform === "Feed" ? fallback.feedOrder : undefined;
+
+  const coverIndex = isValidIndex(record.coverIndex)
+    ? (record.coverIndex as number)
+    : platform === "Feed" ? 1 : undefined;
+
+  const hashtags = Array.isArray(record.hashtags)
+    ? record.hashtags.filter((h): h is string => typeof h === "string" && h.trim().length > 0)
+    : fallback.hashtags;
+
+  return {
+    moodSummary: stringOr(record.moodSummary, fallback.moodSummary),
+    bestPhotoIndex,
+    bestPhotoReason: stringOr(record.bestPhotoReason, fallback.bestPhotoReason),
+    rankedPhotos,
+    skipPhotos,
+    storySequence,
+    feedOrder,
+    coverIndex,
+    captionSuggestion: record.captionSuggestion || fallback.captionSuggestion,
+    hashtags,
+  };
+}
+
+export async function pickPhotosWithGemini({
+  images,
+  platform,
+  mood,
+}: PickPhotosInput): Promise<PhotoPickResult> {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `
+คุณคือผู้ช่วยเลือกและจัดระเบียบรูปภาพสำหรับลงโซเชียลมีเดียในภาษาไทย
+
+วิเคราะห์รูปภาพทั้ง ${images.length} รูปที่ส่งมาให้ โดยรูปแรกที่ส่งมาคือ "รูป 1", รูปที่สองคือ "รูป 2" ไปเรื่อย ๆ จนครบ เรียงตามลำดับ (1-based index)
+
+เป้าหมายการลง:
+- แพลตฟอร์ม/การใช้งาน: ${platform}
+- Mood/โทนที่ต้องการ: ${mood}
+
+ให้เลือกรูป จัดอันดับ และให้คำแนะนำตาม schema JSON ต่อไปนี้เท่านั้น:
+- moodSummary: คำอธิบายสรุปบรรยากาศรวมของเซตรูปภาพนี้ (ภาษาไทย)
+- bestPhotoIndex: หมายเลขรูปภาพที่ดีที่สุด (1 ถึง ${images.length})
+- bestPhotoReason: เหตุผลภาษาไทยที่รูปนี้เหมาะกับแพลตฟอร์มและ mood ที่ต้องการมากที่สุด
+- rankedPhotos: จัดอันดับรูปภาพที่เด่นที่สุด 3 อันดับแรก (มี index, score (คะแนน 1-10), suggestedUse (คำแนะนำในการนำไปใช้เป็นภาษาไทย))
+- skipPhotos: รูปที่แนะนำให้ข้าม (เช่น มืดเกินไป ซ้ำ หรือหลุด mood) (มี index และ reason ภาษาไทย)
+- storySequence: (เฉพาะถ้าแพลตฟอร์มคือ Story) ลำดับรูปที่ควรลงเรียงต่อกันเป็น Story พร้อมประโยคข้อความสั้นหรือคำทรานซิชันสอดแทรก (มี index และ transitionText ภาษาไทย)
+- feedOrder: (เฉพาะถ้าแพลตฟอร์มคือ Feed) ลำดับดัชนีรูปที่ควรจัดเรียงใน Carousel/Swipe Feed (เช่น [2, 1, 3])
+- coverIndex: (เฉพาะถ้าแพลตฟอร์มคือ Feed หรือ Reels cover) หมายเลขรูปที่ดีที่สุดสำหรับใช้เป็นรูปหน้าปก
+- captionSuggestion: ไอเดียคำบรรยาย/แคปชั่นภาษาไทยสั้น ๆ ที่เข้ากับเซตรูป
+- hashtags: แฮชแท็กกว้าง ๆ 5 แฮชแท็ก (เป็นแนวแมส ๆ)
+
+กติกา:
+- ทุกคำอธิบายและเหตุผลต้องเป็นภาษาไทยทั้งหมด
+- การระบุหมายเลขรูปภาพ (index) ต้องอยู่ในช่วง 1 ถึง ${images.length} เท่านั้น ห้ามเกินหรือต่ำกว่า
+- ให้ผลลัพธ์เป็น JSON ตรงตาม schema เท่านั้น ห้ามมี markdown บล็อกครอบนอก JSON
+
+ตอบเป็น JSON เท่านั้น
+`;
+
+  const imageParts = images.map((img) => ({
+    inlineData: {
+      data: img.base64,
+      mimeType: img.mimeType,
+    },
+  }));
+
+  const response = await generateContentWithModelFallback(ai, {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: prompt },
+          ...imageParts,
+        ],
+      },
+    ],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: pickPhotosResponseSchema,
+      temperature: 0.8,
+      topP: 0.95,
+    },
+  });
+
+  return normalizePhotoPickResult(parseJson(response.text ?? ""), images.length, platform, mood);
+}
+
