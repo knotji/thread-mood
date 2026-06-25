@@ -24,7 +24,7 @@ export function MusicMatch({ musicMatch }: MusicMatchProps) {
         <CopyButton value={copyValue} variant="minimal" label="คัดลอกข้อมูลเพลง 📋" />
       </div>
 
-      <p className="text-xs leading-5 text-slate-650 bg-slate-50 p-2.5 rounded-xl">
+      <p className="text-xs leading-5 text-slate-600 bg-slate-50 p-2.5 rounded-xl">
         {musicMatch.whyItFits} <span className="text-slate-400 font-normal">({musicMatch.mood})</span>
       </p>
 

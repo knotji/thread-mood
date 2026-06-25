@@ -126,7 +126,7 @@ export function ResultPanel({
               </div>
               <div className="pt-2 border-t border-slate-200/60">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">มุมมองการนำเสนอ</span>
-                <p className="mt-1 text-xs leading-relaxed text-slate-750 font-semibold text-sky-850">
+                <p className="mt-1 text-xs leading-relaxed text-slate-700 font-semibold text-sky-800">
                   {result.contentAngle}
                 </p>
               </div>

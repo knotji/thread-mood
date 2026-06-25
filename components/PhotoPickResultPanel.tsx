@@ -146,7 +146,7 @@ export function PhotoPickResultPanel({
                 <span className="text-xs font-bold text-slate-700">
                   อันดับ {idx + 1} (รูป {item.index})
                 </span>
-                <span className="ml-auto rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-850">
+                <span className="ml-auto rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-800">
                   {item.score}/10
                 </span>
               </div>
@@ -163,7 +163,7 @@ export function PhotoPickResultPanel({
                 </div>
               ) : null}
 
-              <p className="text-xs text-slate-650 leading-5 mt-1 flex-1">{item.suggestedUse}</p>
+              <p className="text-xs text-slate-600 leading-5 mt-1 flex-1">{item.suggestedUse}</p>
             </div>
           ))}
         </div>
@@ -178,7 +178,7 @@ export function PhotoPickResultPanel({
           <div className="space-y-4 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
             {result.storySequence.map((step, idx) => (
               <div key={`story-step-${idx}`} className="flex items-start gap-4 relative">
-                <div className="grid size-10 place-items-center rounded-full bg-slate-100 text-sm font-bold text-slate-750 border-2 border-white shadow-sm shrink-0">
+                <div className="grid size-10 place-items-center rounded-full bg-slate-100 text-sm font-bold text-slate-700 border-2 border-white shadow-sm shrink-0">
                   {idx + 1}
                 </div>
                 
@@ -251,7 +251,7 @@ export function PhotoPickResultPanel({
                     <span className="text-[9px] font-semibold text-slate-400 mt-1">
                       {getFeedLabel(idx, result.feedOrder!.length)}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-750 mt-0.5">
+                    <span className="text-[10px] font-bold text-slate-700 mt-0.5">
                       รูป {photoIdx}
                     </span>
                   </div>
@@ -329,10 +329,10 @@ export function PhotoPickResultPanel({
                   </div>
                 ) : null}
                 <div className="flex-1 space-y-1">
-                  <span className="text-[9px] rounded bg-red-55/70 px-1.5 py-0.5 font-bold text-red-600 border border-red-100 inline-block">
+                  <span className="text-[9px] rounded bg-red-50/70 px-1.5 py-0.5 font-bold text-red-600 border border-red-100 inline-block">
                     ข้ามได้ (ไม่จำเป็นต้องลง)
                   </span>
-                  <p className="text-xs text-slate-650 leading-relaxed font-normal mt-1">{item.reason}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal mt-1">{item.reason}</p>
                 </div>
               </div>
             ))}

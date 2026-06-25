@@ -302,7 +302,7 @@ export default function Home() {
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
                       เลือกรูปให้หน่อย ({images.length} รูป)
                     </span>
-                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-650 font-semibold flex-wrap">
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-semibold flex-wrap">
                       <span>แพลตฟอร์ม: {pickerPlatform}</span>
                       <span className="text-slate-300">•</span>
                       <span>Mood: {pickerMood}</span>
