@@ -31,6 +31,7 @@ type UploadedImage = {
   id: string;
   file: File;
   previewUrl: string;
+  selected: boolean;
 };
 
 export default function Home() {
@@ -55,6 +56,8 @@ export default function Home() {
   const [pickerResult, setPickerResult] = useState<PhotoPickResult | null>(null);
   const [pickerFallback, setPickerFallback] = useState(false);
   const [pickerFallbackMessage, setPickerFallbackMessage] = useState<string | undefined>();
+  const [isPickerCompressing, setIsPickerCompressing] = useState(false);
+  const [isThreadCompressing, setIsThreadCompressing] = useState(false);
 
   // Shared loading state
   const [isLoading, setIsLoading] = useState(false);
@@ -185,9 +188,10 @@ export default function Home() {
 
   async function handlePickPhotos() {
     const nextErrors: PickerErrors = {};
+    const selectedImages = images.filter((img) => img.selected);
 
-    if (images.length < 2 || images.length > 6) {
-      nextErrors.images = "กรุณาเลือกรูปภาพ 2 ถึง 6 รูปนะ";
+    if (selectedImages.length < 2 || selectedImages.length > 6) {
+      nextErrors.images = "กรุณาเลือกรูปภาพอย่างน้อย 2 รูป และไม่เกิน 6 รูปสำหรับวิเคราะห์นะ";
     }
     if (!pickerPlatform) {
       nextErrors.platform = "กรุณาเลือกแพลตฟอร์มก่อนนะ";
@@ -206,9 +210,15 @@ export default function Home() {
 
     try {
       const formData = new FormData();
-      images.forEach((img) => {
+      selectedImages.forEach((img) => {
         formData.append("images", img.file);
       });
+      
+      const selectedIndices = selectedImages.map((img) => {
+        return images.findIndex((x) => x.id === img.id) + 1;
+      });
+      formData.append("indices", selectedIndices.join(","));
+
       formData.append("platform", pickerPlatform);
       formData.append("mood", pickerMood);
 
@@ -287,20 +297,20 @@ export default function Home() {
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-4">
-                    {images.slice(0, 3).map((img, idx) => (
+                    {images.filter((img) => img.selected).slice(0, 3).map((img, idx) => (
                       <div key={img.id} className="relative size-10 overflow-hidden rounded-xl border-2 border-white shadow-sm shrink-0">
                         <img src={img.previewUrl} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
                       </div>
                     ))}
-                    {images.length > 3 && (
+                    {images.filter((img) => img.selected).length > 3 && (
                       <div className="relative size-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-[10px] font-bold text-white z-10 select-none">
-                        +{images.length - 3}
+                        +{images.filter((img) => img.selected).length - 3}
                       </div>
                     )}
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-                      เลือกรูปให้หน่อย ({images.length} รูป)
+                      เลือกรูปให้หน่อย (วิเคราะห์ {images.filter((img) => img.selected).length}/{images.length} รูป)
                     </span>
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-semibold flex-wrap">
                       <span>แพลตฟอร์ม: {pickerPlatform}</span>
@@ -361,6 +371,7 @@ export default function Home() {
                   previewUrl={previewUrl}
                   error={errors.image}
                   onChange={handleImageChange}
+                  onCompressingChange={setIsThreadCompressing}
                 />
               ) : (
                 <PhotoPickerUploader
@@ -368,6 +379,7 @@ export default function Home() {
                   onChange={handleImagesChange}
                   error={pickerErrors.images}
                   onError={(err) => setPickerErrors((c) => ({ ...c, images: err }))}
+                  onCompressingChange={setIsPickerCompressing}
                 />
               )}
             </>
@@ -405,10 +417,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleGenerate}
-                  disabled={isLoading}
+                  disabled={isLoading || isThreadCompressing}
                   className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 cursor-pointer select-none"
                 >
-                  {isLoading ? "กำลังคิดให้อยู่…" : "คิดเธรดให้หน่อย"}
+                  {isLoading ? "กำลังคิดให้อยู่…" : isThreadCompressing ? "กำลังปรับขนาดรูป…" : "คิดเธรดให้หน่อย"}
                 </button>
               </>
             ) : (
@@ -436,13 +448,34 @@ export default function Home() {
                   </p>
                 ) : null}
 
+                {images.filter((img) => img.selected).length < 2 ? (
+                  <p className="text-xs text-slate-500 font-semibold mb-2">
+                    💡 เลือกอย่างน้อย 2 รูปเพื่อให้ AI เปรียบเทียบได้
+                  </p>
+                ) : images.filter((img) => img.selected).length === 6 ? (
+                  <p className="text-xs text-sky-700 font-semibold mb-2">
+                    ✨ เลือกครบ 6 รูปแล้ว ถ้าอยากเลือกรูปอื่น ให้เอาบางรูปออกก่อน
+                  </p>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={handlePickPhotos}
-                  disabled={isLoading}
+                  disabled={
+                    images.filter((img) => img.selected).length < 2 ||
+                    images.filter((img) => img.selected).length > 6 ||
+                    isPickerCompressing ||
+                    !pickerPlatform ||
+                    !pickerMood ||
+                    isLoading
+                  }
                   className="w-full rounded-2xl bg-slate-950 px-5 py-4 text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 cursor-pointer select-none"
                 >
-                  {isLoading ? "กำลังเลือกรูปภาพให้อยู่…" : "เลือกรูปให้หน่อย"}
+                  {isLoading
+                    ? "กำลังเลือกรูปภาพให้อยู่…"
+                    : isPickerCompressing
+                    ? "กำลังปรับขนาดรูป…"
+                    : "เลือกรูปให้หน่อย"}
                 </button>
               </>
             )

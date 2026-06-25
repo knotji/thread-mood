@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { compressImageFile } from "@/lib/image-compress";
 
@@ -9,6 +9,7 @@ type ImageUploaderProps = {
   previewUrl: string;
   error?: string;
   onChange: (file: File | null, error?: string) => void;
+  onCompressingChange?: (compressing: boolean) => void;
 };
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -19,9 +20,14 @@ export function ImageUploader({
   previewUrl,
   error,
   onChange,
+  onCompressingChange,
 }: ImageUploaderProps) {
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressedSuccess, setCompressedSuccess] = useState(false);
+
+  useEffect(() => {
+    onCompressingChange?.(isCompressing);
+  }, [isCompressing, onCompressingChange]);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selected = event.target.files?.[0] ?? null;

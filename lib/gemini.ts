@@ -675,7 +675,7 @@ function getToneGuidance(tone: string): string {
 }
 
 type PickPhotosInput = {
-  images: { base64: string; mimeType: string }[];
+  images: { base64: string; mimeType: string; originalIndex: number }[];
   platform: string;
   mood: string;
 };
@@ -743,28 +743,33 @@ const pickPhotosResponseSchema = {
 export function createLocalPhotoPickFallback(
   platform: string,
   mood: string,
+  allowedIndices: number[] = [1, 2],
 ): PhotoPickResult {
+  const indices = allowedIndices.length >= 2 ? allowedIndices : [1, 2];
+  const first = indices[0];
+  const second = indices[1];
+
   return {
     moodSummary: `รูปภาพเซตนี้เน้นอารมณ์แบบ ${mood} เหมาะมากสำหรับนำเสนอแนวชีวิตประจำวันและท่องเที่ยว`,
-    bestPhotoIndex: 1,
-    bestPhotoReason: `รูปที่ 1 มีองค์ประกอบและแสงที่ดึงดูดสายตาดีที่สุด เข้ากับ mood แบบ ${mood} ที่ต้องการ`,
+    bestPhotoIndex: first,
+    bestPhotoReason: `รูปที่ ${first} มีองค์ประกอบและแสงที่ดึงดูดสายตาดีที่สุด เข้ากับ mood แบบ ${mood} ที่ต้องการ`,
     rankedPhotos: [
-      { index: 1, score: 9, suggestedUse: "รูปเปิดเรื่องหรือจุดดึงสายตาแรก" },
-      { index: 2, score: 8, suggestedUse: "รูปเสริมอารมณ์ความรู้สึกหรือรายละเอียดเสริม" },
+      { index: first, score: 9, suggestedUse: "รูปเปิดเรื่องหรือจุดดึงสายตาแรก" },
+      { index: second, score: 8, suggestedUse: "รูปเสริมอารมณ์ความรู้สึกหรือรายละเอียดเสริม" },
     ],
     skipPhotos: [],
     ...(platform === "Story"
       ? {
           storySequence: [
-            { index: 1, transitionText: "เปิดเรื่องให้น่าติดตาม" },
-            { index: 2, transitionText: "เล่าบรรยากาศต่อ" },
+            { index: first, transitionText: "เปิดเรื่องให้น่าติดตาม" },
+            { index: second, transitionText: "เล่าบรรยากาศต่อ" },
           ],
         }
       : {}),
     ...(platform === "Feed"
       ? {
-          feedOrder: [1, 2],
-          coverIndex: 1,
+          feedOrder: [first, second],
+          coverIndex: first,
         }
       : {}),
     captionSuggestion: `ปล่อยใจสบาย ๆ ในวันที่มีความสุข 🌿✨`,
@@ -774,25 +779,28 @@ export function createLocalPhotoPickFallback(
 
 function normalizePhotoPickResult(
   value: unknown,
-  numImages: number,
+  allowedIndices: number[],
   platform: string,
   mood: string,
 ): PhotoPickResult {
-  const fallback = createLocalPhotoPickFallback(platform, mood);
+  const fallback = createLocalPhotoPickFallback(platform, mood, allowedIndices);
+  const validIndices = allowedIndices.length > 0 ? allowedIndices : [1, 2];
+  const defaultIdx = validIndices[0];
+
   const record = value as Partial<PhotoPickResult>;
 
-  // Ensure index is valid (between 1 and numImages)
+  // Ensure index is valid (is one of the allowedIndices)
   const isValidIndex = (idx: unknown): boolean =>
-    typeof idx === "number" && idx >= 1 && idx <= numImages;
+    typeof idx === "number" && validIndices.includes(idx);
 
   const bestPhotoIndex = isValidIndex(record.bestPhotoIndex)
     ? (record.bestPhotoIndex as number)
-    : 1;
+    : defaultIdx;
 
   const rankedPhotos = Array.isArray(record.rankedPhotos)
     ? record.rankedPhotos
         .map((p) => {
-          const idx = typeof p?.index === "number" ? p.index : 1;
+          const idx = typeof p?.index === "number" ? p.index : defaultIdx;
           const score = typeof p?.score === "number" ? p.score : 8;
           const suggestedUse = typeof p?.suggestedUse === "string" ? p.suggestedUse : "";
           return { index: idx, score, suggestedUse };
@@ -803,7 +811,7 @@ function normalizePhotoPickResult(
   const skipPhotos = Array.isArray(record.skipPhotos)
     ? record.skipPhotos
         .map((p) => {
-          const idx = typeof p?.index === "number" ? p.index : 1;
+          const idx = typeof p?.index === "number" ? p.index : defaultIdx;
           const reason = typeof p?.reason === "string" ? p.reason : "";
           return { index: idx, reason };
         })
@@ -813,7 +821,7 @@ function normalizePhotoPickResult(
   const storySequence = Array.isArray(record.storySequence)
     ? record.storySequence
         .map((s) => {
-          const idx = typeof s?.index === "number" ? s.index : 1;
+          const idx = typeof s?.index === "number" ? s.index : defaultIdx;
           const transitionText =
             typeof s?.transitionText === "string" ? s.transitionText : "";
           return { index: idx, transitionText };
@@ -827,7 +835,7 @@ function normalizePhotoPickResult(
 
   const coverIndex = isValidIndex(record.coverIndex)
     ? (record.coverIndex as number)
-    : platform === "Feed" ? 1 : undefined;
+    : platform === "Feed" ? defaultIdx : undefined;
 
   const hashtags = Array.isArray(record.hashtags)
     ? record.hashtags.filter((h): h is string => typeof h === "string" && h.trim().length > 0)
@@ -863,7 +871,8 @@ export async function pickPhotosWithGemini({
   const prompt = `
 คุณคือผู้ช่วยเลือกและจัดระเบียบรูปภาพสำหรับลงโซเชียลมีเดียในภาษาไทย
 
-วิเคราะห์รูปภาพทั้ง ${images.length} รูปที่ส่งมาให้ โดยรูปแรกที่ส่งมาคือ "รูป 1", รูปที่สองคือ "รูป 2" ไปเรื่อย ๆ จนครบ เรียงตามลำดับ (1-based index)
+วิเคราะห์รูปภาพทั้ง ${images.length} รูปที่ส่งมาให้ ซึ่งผู้ใช้เรียกและระบุป้ายกำกับของรูปภาพแต่ละรูปดังนี้:
+${images.map((img, idx) => `- รูปที่ ${idx + 1} ในที่นี้ตรงกับ "${img.originalIndex}" (ผู้ใช้ระบุและเห็นเป็น "รูป ${img.originalIndex}")`).join("\n")}
 
 เป้าหมายการลง:
 - แพลตฟอร์ม/การใช้งาน: ${platform}
@@ -871,19 +880,19 @@ export async function pickPhotosWithGemini({
 
 ให้เลือกรูป จัดอันดับ และให้คำแนะนำตาม schema JSON ต่อไปนี้เท่านั้น:
 - moodSummary: คำอธิบายสรุปบรรยากาศรวมของเซตรูปภาพนี้ (ภาษาไทย)
-- bestPhotoIndex: หมายเลขรูปภาพที่ดีที่สุด (1 ถึง ${images.length})
+- bestPhotoIndex: หมายเลขรูปภาพที่ดีที่สุด (ต้องเป็นตัวเลข original index ตัวใดตัวหนึ่งในเซตนี้: [${images.map(img => img.originalIndex).join(", ")}])
 - bestPhotoReason: เหตุผลภาษาไทยที่รูปนี้เหมาะกับแพลตฟอร์มและ mood ที่ต้องการมากที่สุด
-- rankedPhotos: จัดอันดับรูปภาพที่เด่นที่สุด 3 อันดับแรก (มี index, score (คะแนน 1-10), suggestedUse (คำแนะนำในการนำไปใช้เป็นภาษาไทย))
-- skipPhotos: รูปที่แนะนำให้ข้าม (เช่น มืดเกินไป ซ้ำ หรือหลุด mood) (มี index และ reason ภาษาไทย)
-- storySequence: (เฉพาะถ้าแพลตฟอร์มคือ Story) ลำดับรูปที่ควรลงเรียงต่อกันเป็น Story พร้อมประโยคข้อความสั้นหรือคำทรานซิชันสอดแทรก (มี index และ transitionText ภาษาไทย)
-- feedOrder: (เฉพาะถ้าแพลตฟอร์มคือ Feed) ลำดับดัชนีรูปที่ควรจัดเรียงใน Carousel/Swipe Feed (เช่น [2, 1, 3])
-- coverIndex: (เฉพาะถ้าแพลตฟอร์มคือ Feed หรือ Reels cover) หมายเลขรูปที่ดีที่สุดสำหรับใช้เป็นรูปหน้าปก
+- rankedPhotos: จัดอันดับรูปภาพที่เด่นที่สุด 3 อันดับแรก (มี index (ต้องเป็นหนึ่งในตัวเลข original index: [${images.map(img => img.originalIndex).join(", ")}]), score (คะแนน 1-10), suggestedUse (คำแนะนำในการนำไปใช้เป็นภาษาไทย))
+- skipPhotos: รูปที่แนะนำให้ข้าม (มี index (ต้องเป็นหนึ่งในตัวเลข original index: [${images.map(img => img.originalIndex).join(", ")}]) และ reason ภาษาไทย)
+- storySequence: (เฉพาะถ้าแพลตฟอร์มคือ Story) ลำดับรูปที่ควรลงเรียงต่อกันเป็น Story พร้อมประโยคข้อความสั้นหรือคำทรานซิชันสอดแทรก (มี index (ต้องเป็นหนึ่งในตัวเลข original index) และ transitionText ภาษาไทย)
+- feedOrder: (เฉพาะถ้าแพลตฟอร์มคือ Feed) ลำดับรูปที่ควรจัดเรียงใน Carousel/Swipe Feed (ต้องเป็นตัวเลข original index เช่น [${images.map(img => img.originalIndex).join(", ")}])
+- coverIndex: (เฉพาะถ้าแพลตฟอร์มคือ Feed หรือ Reels cover) หมายเลขรูปที่ดีที่สุดสำหรับใช้เป็นรูปหน้าปก (ต้องเป็นหนึ่งในตัวเลข original index)
 - captionSuggestion: ไอเดียคำบรรยาย/แคปชั่นภาษาไทยสั้น ๆ ที่เข้ากับเซตรูป
 - hashtags: แฮชแท็กกว้าง ๆ 5 แฮชแท็ก (เป็นแนวแมส ๆ)
 
 กติกา:
 - ทุกคำอธิบายและเหตุผลต้องเป็นภาษาไทยทั้งหมด
-- การระบุหมายเลขรูปภาพ (index) ต้องอยู่ในช่วง 1 ถึง ${images.length} เท่านั้น ห้ามเกินหรือต่ำกว่า
+- การระบุหมายเลขรูปภาพ (index, bestPhotoIndex, rankedPhotos.index, skipPhotos.index, storySequence.index, feedOrder, coverIndex) ต้องใช้ตัวเลข original index จากเซตนี้เท่านั้น: [${images.map(img => img.originalIndex).join(", ")}] ห้ามใช้เลขอื่นเด็ดขาด!
 - ให้ผลลัพธ์เป็น JSON ตรงตาม schema เท่านั้น ห้ามมี markdown บล็อกครอบนอก JSON
 
 ตอบเป็น JSON เท่านั้น
@@ -914,6 +923,7 @@ export async function pickPhotosWithGemini({
     },
   });
 
-  return normalizePhotoPickResult(parseJson(response.text ?? ""), images.length, platform, mood);
+  const allowedIndices = images.map((img) => img.originalIndex);
+  return normalizePhotoPickResult(parseJson(response.text ?? ""), allowedIndices, platform, mood);
 }
 

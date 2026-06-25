@@ -11,12 +11,21 @@ const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export async function POST(request: Request) {
   let selectedPlatform = "";
   let selectedMood = "";
+  let indices: number[] = [];
 
   try {
     const formData = await request.formData();
     const images = formData.getAll("images");
     const platform = formData.get("platform");
     const mood = formData.get("mood");
+    const indicesStr = formData.get("indices");
+
+    if (typeof indicesStr === "string") {
+      indices = indicesStr.split(",").map(Number).filter((n) => !isNaN(n));
+    }
+    if (indices.length !== images.length) {
+      indices = images.map((_, idx) => idx + 1);
+    }
 
     if (!images || images.length < 2 || images.length > 6) {
       return NextResponse.json(
@@ -67,12 +76,13 @@ export async function POST(request: Request) {
     selectedMood = mood;
 
     const base64Images = await Promise.all(
-      images.map(async (img) => {
+      images.map(async (img, idx) => {
         const file = img as File;
         const buffer = Buffer.from(await file.arrayBuffer());
         return {
           base64: buffer.toString("base64"),
           mimeType: file.type,
+          originalIndex: indices[idx],
         };
       })
     );
@@ -89,7 +99,7 @@ export async function POST(request: Request) {
     
     // Provide fallback
     if (selectedPlatform && selectedMood) {
-      const fallbackResult = createLocalPhotoPickFallback(selectedPlatform, selectedMood);
+      const fallbackResult = createLocalPhotoPickFallback(selectedPlatform, selectedMood, indices);
       return NextResponse.json({
         result: fallbackResult,
         fallback: true,

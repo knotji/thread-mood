@@ -32,6 +32,7 @@ type UploadedImage = {
   id: string;
   file: File;
   previewUrl: string;
+  selected: boolean;
 };
 
 // Mock results containing realistic Thai copy
@@ -147,12 +148,12 @@ function DemoContent() {
   const mockFile = hasMounted ? new File([], "demo1.png") : null;
 
   const mockImages: UploadedImage[] = hasMounted ? [
-    { id: "1", file: new File([], "demo1.png"), previewUrl: "/demo/demo1.svg" },
-    { id: "2", file: new File([], "demo2.png"), previewUrl: "/demo/demo2.svg" },
-    { id: "3", file: new File([], "demo3.png"), previewUrl: "/demo/demo3.svg" },
-    { id: "4", file: new File([], "demo4.png"), previewUrl: "/demo/demo4.svg" },
-    { id: "5", file: new File([], "demo5.png"), previewUrl: "/demo/demo5.svg" },
-    { id: "6", file: new File([], "demo6.png"), previewUrl: "/demo/demo6.svg" }
+    { id: "1", file: new File([], "demo1.png"), previewUrl: "/demo/demo1.svg", selected: true },
+    { id: "2", file: new File([], "demo2.png"), previewUrl: "/demo/demo2.svg", selected: true },
+    { id: "3", file: new File([], "demo3.png"), previewUrl: "/demo/demo3.svg", selected: true },
+    { id: "4", file: new File([], "demo4.png"), previewUrl: "/demo/demo4.svg", selected: true },
+    { id: "5", file: new File([], "demo5.png"), previewUrl: "/demo/demo5.svg", selected: true },
+    { id: "6", file: new File([], "demo6.png"), previewUrl: "/demo/demo6.svg", selected: false }
   ] : [];
 
 
@@ -273,20 +274,20 @@ function DemoContent() {
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-4">
-                    {images.slice(0, 3).map((img, idx) => (
+                    {images.filter((img) => img.selected).slice(0, 3).map((img, idx) => (
                       <div key={img.id} className="relative size-10 overflow-hidden rounded-xl border-2 border-white shadow-sm shrink-0">
                         <img src={img.previewUrl} alt={`Thumbnail ${idx + 1}`} className="h-full w-full object-cover" />
                       </div>
                     ))}
-                    {images.length > 3 && (
+                    {images.filter((img) => img.selected).length > 3 && (
                       <div className="relative size-10 rounded-xl bg-slate-900 border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-[10px] font-bold text-white z-10 select-none">
-                        +{images.length - 3}
+                        +{images.filter((img) => img.selected).length - 3}
                       </div>
                     )}
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-                      เลือกรูปให้หน่อย ({images.length} รูป)
+                      เลือกรูปให้หน่อย (วิเคราะห์ {images.filter((img) => img.selected).length}/{images.length} รูป)
                     </span>
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-semibold flex-wrap">
                       <span>แพลตฟอร์ม: {pickerPlatform}</span>
