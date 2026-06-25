@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import type { ThreadResult } from "@/types/thread";
-import { BestPickCard } from "./BestPickCard";
 import { CopyButton } from "./CopyButton";
 import { MusicMatch } from "./MusicMatch";
-import { ReadySummary } from "./ReadySummary";
 
 type ResultPanelProps = {
   result: ThreadResult;
@@ -23,12 +21,14 @@ export function ResultPanel({
   onRegenerate,
   disabled,
 }: ResultPanelProps) {
-  const [copiedHero, setCopiedHero] = useState(false);
+  const [copiedBest, setCopiedBest] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  function handleCopyHero() {
-    navigator.clipboard.writeText(`${result.bestPick.overlay}\n\n${result.bestPick.caption}`);
-    setCopiedHero(true);
-    setTimeout(() => setCopiedHero(false), 2000);
+  function handleCopyBest() {
+    const textToCopy = `${result.bestPick.overlay}\n\n${result.bestPick.caption}\n\n${result.hashtags.join(" ")}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedBest(true);
+    setTimeout(() => setCopiedBest(false), 2000);
   }
 
   return (
@@ -44,72 +44,118 @@ export function ResultPanel({
         </div>
       ) : null}
 
-      {/* Hero Result Section */}
-      <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-md space-y-4 border border-slate-800">
+      {/* 1. Primary Best Pack Card */}
+      <section className="rounded-3xl bg-slate-950 p-5 text-white shadow-md space-y-4 border border-slate-900">
         <div className="flex items-center justify-between">
           <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-300 border border-sky-500/30">
-            🌟 ประโยคที่แนะนำสุด
+            🌟 ชุดที่แนะนำ
           </span>
         </div>
-        <div className="space-y-3">
+
+        <div className="space-y-3.5">
+          {/* Overlay Box */}
           <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
-            <span className="text-xs font-semibold text-slate-400">คำบนคลิป (Overlay)</span>
-            <p className="mt-1.5 whitespace-pre-line text-lg font-bold leading-8 text-sky-200">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">คำบนคลิป (Overlay)</span>
+            <p className="mt-1 whitespace-pre-line text-lg font-bold leading-7 text-sky-200">
               {result.bestPick.overlay}
             </p>
           </div>
+
+          {/* Caption Box */}
           <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
-            <span className="text-xs font-semibold text-slate-400">คำใต้คลิป / แคปชั่น (Caption)</span>
-            <p className="mt-1.5 text-sm leading-6 text-slate-200">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">คำใต้คลิป (Caption)</span>
+            <p className="mt-1 text-sm leading-6 text-slate-100 whitespace-pre-line">
               {result.bestPick.caption}
             </p>
           </div>
+
+          {/* Hashtags Inline */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {result.hashtags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-lg bg-white/10 px-2 py-0.5 text-xs font-semibold text-slate-200 border border-white/5"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Rationale */}
+          <p className="text-[11px] leading-relaxed text-slate-400 font-normal italic">
+            💡 เหตุผล: {result.bestPick.reason}
+          </p>
         </div>
+
         <button
           type="button"
-          onClick={handleCopyHero}
-          className="w-full rounded-2xl bg-sky-500 hover:bg-sky-400 py-3 text-sm font-semibold text-slate-950 shadow-sm transition active:scale-[0.98] cursor-pointer"
+          onClick={handleCopyBest}
+          className="w-full rounded-2xl bg-sky-500 hover:bg-sky-400 py-3.5 text-sm font-semibold text-slate-950 shadow-sm transition active:scale-[0.99] cursor-pointer"
         >
-          {copiedHero ? "คัดลอกสำเร็จ! ✓" : "คัดลอกชุดแนะนำ"}
+          {copiedBest ? "คัดลอกสำเร็จ! ✓" : "คัดลอกชุดนี้"}
         </button>
       </section>
 
-      <ReadySummary result={result} />
+      {/* 2. Compact Music Match */}
+      <MusicMatch musicMatch={result.musicMatch} />
 
+      {/* 3. Collapsible Section (Secondary Options) */}
       <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-semibold text-slate-950">Mood และมุมคอนเทนต์</h2>
-            <p className="mt-2 leading-7 text-slate-700">{result.imageMood}</p>
-            <p className="mt-3 rounded-2xl bg-sky-50 p-3 leading-7 text-sky-900">
-              {result.contentAngle}
-            </p>
-          </div>
-          <CopyButton value={`${result.imageMood}\n\n${result.contentAngle}`} />
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex w-full items-center justify-between font-semibold text-slate-900 cursor-pointer py-1 text-sm sm:text-base select-none"
+        >
+          <span>ดูตัวเลือกเพิ่มเติม (คำคม/ภาพมุมอื่น)</span>
+          <span className="text-slate-500 font-bold transition-transform duration-200" style={{ transform: showAdvanced ? "rotate(180deg)" : "rotate(0deg)" }}>
+            ▼
+          </span>
+        </button>
+
+        {showAdvanced && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-4 space-y-5 pt-4 border-t border-slate-100"
+          >
+            {/* Mood Summary & Content Angle */}
+            <div className="space-y-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
+              <div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Mood ของรูปภาพ</span>
+                <p className="mt-1 text-xs leading-relaxed text-slate-700">{result.imageMood}</p>
+              </div>
+              <div className="pt-2 border-t border-slate-200/60">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">มุมมองการนำเสนอ</span>
+                <p className="mt-1 text-xs leading-relaxed text-slate-750 font-semibold text-sky-850">
+                  {result.contentAngle}
+                </p>
+              </div>
+            </div>
+
+            {/* Other overlay options */}
+            <ListSection
+              title="ตัวเลือกคำแปะคลิปอื่น ๆ"
+              subtitle="คำบนคลิปทางเลือก"
+              items={result.overlayThreads}
+              preserveLines
+            />
+
+            {/* Other caption options */}
+            <ListSection
+              title="ตัวเลือกเธรด / แคปชั่นอื่น ๆ"
+              subtitle="ประโยคข้อคิดอื่น ๆ สำหรับเลือกสลับใช้งาน"
+              items={result.captions}
+            />
+          </motion.div>
+        )}
       </section>
 
-      <ListSection
-        title="Overlay Thread"
-        subtitle="คำแปะคลิปสั้น ๆ อ่านทันใน 1-2 วินาที"
-        items={result.overlayThreads}
-        preserveLines
-      />
-      <ListSection
-        title="เธรด / Caption"
-        subtitle="คำคม ข้อคิด หรือประโยคบนคลิปที่ใช้ได้ทันที"
-        items={result.captions}
-      />
-      <ListSection title="Hashtag แมส ๆ" subtitle="5 แฮชแท็กกว้าง ๆ สำหรับ reach" items={result.hashtags} />
-
-      <MusicMatch musicMatch={result.musicMatch} />
-      <BestPickCard bestPick={result.bestPick} />
-
+      {/* Action button */}
       <button
         type="button"
         onClick={onRegenerate}
         disabled={disabled}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-slate-900 shadow-sm transition hover:border-sky-200 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 font-semibold text-slate-900 shadow-sm transition hover:border-sky-200 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
       >
         คิดใหม่อีกชุด
       </button>
@@ -126,29 +172,26 @@ type ListSectionProps = {
 
 function ListSection({ title, subtitle, items, preserveLines }: ListSectionProps) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-slate-950">{title}</h3>
-          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-        </div>
-        <CopyButton value={items.join("\n")} />
+    <div className="space-y-2.5">
+      <div>
+        <h4 className="text-xs font-bold text-slate-950">{title}</h4>
+        <p className="text-[10px] text-slate-400">{subtitle}</p>
       </div>
       <div className="space-y-2">
         {items.map((item, index) => (
-          <div key={`${title}-${index}`} className="rounded-2xl bg-slate-50 p-3">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="text-xs font-semibold text-slate-400">
+          <div key={`${title}-${index}`} className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <span className="text-[10px] font-bold text-slate-300">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <CopyButton value={item} label="คัดลอกแผ่นนี้" variant="minimal" />
             </div>
-            <p className={`leading-7 text-slate-900 ${preserveLines ? "whitespace-pre-line" : ""}`}>
+            <p className={`text-xs leading-6 text-slate-800 ${preserveLines ? "whitespace-pre-line" : ""}`}>
               {item}
             </p>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

@@ -16,49 +16,41 @@ export function MusicMatch({ musicMatch }: MusicMatchProps) {
   ].join("\n");
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-slate-950">AI Music Match</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            เพลงเป็นไอเดียตั้งต้น แนะนำให้ค้นชื่อเพลงหรือ keyword ใน IG Music อีกครั้ง
-          </p>
-        </div>
-        <CopyButton value={copyValue} />
+    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-semibold text-slate-950 text-sm sm:text-base flex items-center gap-1.5">
+          🎵 แนะนำเพลงประกอบ Reels
+        </h3>
+        <CopyButton value={copyValue} variant="minimal" label="คัดลอกข้อมูลเพลง 📋" />
       </div>
 
-      <div className="space-y-4">
-        <div className="rounded-2xl bg-slate-50 p-3">
-          <p className="text-sm font-medium text-slate-500">Mood เพลง</p>
-          <p className="mt-1 text-slate-900">{musicMatch.mood}</p>
-        </div>
-        <div className="rounded-2xl bg-slate-50 p-3">
-          <p className="text-sm font-medium text-slate-500">ทำไมถึงเข้ากัน</p>
-          <p className="mt-1 leading-7 text-slate-900">{musicMatch.whyItFits}</p>
-        </div>
-        <div>
-          <p className="mb-2 text-sm font-medium text-slate-500">Keywords สำหรับ IG Music</p>
-          <div className="flex flex-wrap gap-2">
-            {musicMatch.songKeywords.map((keyword) => (
-              <span
-                key={keyword}
-                className="rounded-full bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700"
-              >
-                {keyword}
-              </span>
-            ))}
+      <p className="text-xs leading-5 text-slate-650 bg-slate-50 p-2.5 rounded-xl">
+        {musicMatch.whyItFits} <span className="text-slate-400 font-normal">({musicMatch.mood})</span>
+      </p>
+
+      {/* Keywords */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] font-semibold text-slate-400">ค้นใน IG Music:</span>
+        {musicMatch.songKeywords.map((keyword) => (
+          <span
+            key={keyword}
+            className="rounded-lg bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 border border-sky-100/50"
+          >
+            {keyword}
+          </span>
+        ))}
+      </div>
+
+      {/* Songs */}
+      <div className="grid gap-2 sm:grid-cols-3">
+        {musicMatch.songSuggestions.map((song) => (
+          <div key={`${song.title}-${song.artist}`} className="rounded-xl bg-slate-50/50 p-2.5 border border-slate-100/80">
+            <p className="font-bold text-xs text-slate-900 truncate" title={`${song.title} - ${song.artist}`}>
+              {song.title} <span className="font-normal text-slate-500">· {song.artist}</span>
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{song.reason}</p>
           </div>
-        </div>
-        <div className="space-y-2">
-          {musicMatch.songSuggestions.map((song) => (
-            <div key={`${song.title}-${song.artist}`} className="rounded-2xl bg-slate-50 p-3">
-              <p className="font-semibold text-slate-950">
-                {song.title} · {song.artist}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">{song.reason}</p>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   );
