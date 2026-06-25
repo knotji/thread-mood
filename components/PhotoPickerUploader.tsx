@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useRef } from "react";
 import Image from "next/image";
-import { useRef } from "react";
+import { compressImageFile } from "@/lib/image-compress";
 
 type UploadedImage = {
   id: string;
@@ -27,15 +28,19 @@ export function PhotoPickerUploader({
   onError,
 }: PhotoPickerUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressedSuccess, setCompressedSuccess] = useState(false);
 
-  function processFiles(files: FileList) {
+  async function processFiles(files: FileList) {
     onError(undefined);
-    const validNewImages: UploadedImage[] = [];
+    setCompressedSuccess(false);
+
     let currentTotal = images.length;
     let limitExceeded = false;
     let typeError = false;
-    let sizeError = false;
 
+    // Filter files by type and slot limits first
+    const filesToCompress: File[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
@@ -49,29 +54,72 @@ export function PhotoPickerUploader({
         continue;
       }
 
-      if (file.size > MAX_IMAGE_SIZE) {
-        sizeError = true;
-        continue;
-      }
-
-      validNewImages.push({
-        id: Math.random().toString(36).substring(2, 9),
-        file,
-        previewUrl: URL.createObjectURL(file),
-      });
+      filesToCompress.push(file);
       currentTotal++;
     }
 
-    if (limitExceeded) {
-      onError("อัปโหลดได้สูงสุด 6 รูปนะ");
-    } else if (typeError) {
-      onError("บางรูปไม่ใช่ไฟล์ JPG, PNG หรือ WebP จึงไม่ได้นำเข้าระบบ");
-    } else if (sizeError) {
-      onError("บางรูปใหญ่เกิน 5MB จึงไม่ได้นำเข้าระบบ");
+    if (filesToCompress.length === 0) {
+      if (limitExceeded) {
+        onError("อัปโหลดได้สูงสุด 6 รูปนะ");
+      } else if (typeError) {
+        onError("บางรูปไม่ใช่ไฟล์ JPG, PNG หรือ WebP จึงไม่ได้นำเข้าระบบ");
+      }
+      return;
     }
 
-    if (validNewImages.length > 0) {
-      onChange([...images, ...validNewImages]);
+    setIsCompressing(true);
+
+    try {
+      // Compress valid files concurrently
+      const compressionPromises = filesToCompress.map(async (file) => {
+        try {
+          const compressed = await compressImageFile(file);
+          return { original: file, compressed, success: true };
+        } catch (err) {
+          console.error("Compression failed for", file.name, err);
+          return { original: file, compressed: file, success: false };
+        }
+      });
+
+      const results = await Promise.all(compressionPromises);
+      const validNewImages: UploadedImage[] = [];
+      let sizeError = false;
+      let didAnyCompress = false;
+
+      results.forEach(({ original, compressed }) => {
+        if (compressed.size > MAX_IMAGE_SIZE) {
+          sizeError = true;
+        } else {
+          if (compressed.size < original.size) {
+            didAnyCompress = true;
+          }
+          validNewImages.push({
+            id: Math.random().toString(36).substring(2, 9),
+            file: compressed,
+            previewUrl: URL.createObjectURL(compressed),
+          });
+        }
+      });
+
+      if (limitExceeded) {
+        onError("อัปโหลดได้สูงสุด 6 รูปนะ");
+      } else if (typeError) {
+        onError("บางรูปไม่ใช่ไฟล์ JPG, PNG หรือ WebP จึงไม่ได้นำเข้าระบบ");
+      } else if (sizeError) {
+        onError("รูปนี้ยังใหญ่เกินไปหลังปรับขนาด ลองเลือกรูปอื่นหรือลดจำนวนรูปนะ");
+      }
+
+      if (validNewImages.length > 0) {
+        onChange([...images, ...validNewImages]);
+        if (didAnyCompress) {
+          setCompressedSuccess(true);
+        }
+      }
+    } catch (err) {
+      console.error("Batch compression failed", err);
+      onError("เกิดข้อผิดพลาดในการปรับขนาดรูปภาพ");
+    } finally {
+      setIsCompressing(false);
     }
   }
 
@@ -79,7 +127,6 @@ export function PhotoPickerUploader({
     if (event.target.files) {
       processFiles(event.target.files);
     }
-    // Reset file input value so same file can be selected again if deleted
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -114,9 +161,16 @@ export function PhotoPickerUploader({
             เลือกรูปภาพ 2-6 รูปเพื่อจัดอันดับและวางแผนจัดลำดับคอนเทนต์
           </p>
         </div>
-        <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-          {images.length} / 6 รูป
-        </span>
+        <div className="flex items-center gap-2">
+          {compressedSuccess && (
+            <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100/50 uppercase tracking-wide">
+              ปรับขนาดรูปเรียบร้อย
+            </span>
+          )}
+          <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
+            {images.length} / 6 รูป
+          </span>
+        </div>
       </div>
 
       <div
@@ -155,7 +209,12 @@ export function PhotoPickerUploader({
             </div>
           ))}
 
-          {images.length < MAX_IMAGES ? (
+          {isCompressing ? (
+            <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-dashed border-sky-300 bg-sky-50/30 text-center p-2">
+              <div className="mb-2 animate-spin text-lg">⏳</div>
+              <p className="text-[10px] font-bold text-sky-700 leading-tight">กำลังปรับขนาดรูปให้เบาลง…</p>
+            </div>
+          ) : images.length < MAX_IMAGES ? (
             <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 transition hover:border-sky-300 hover:bg-sky-50/50">
               <input
                 ref={fileInputRef}
@@ -164,6 +223,7 @@ export function PhotoPickerUploader({
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileChange}
                 className="sr-only"
+                disabled={isCompressing}
               />
               <div className="grid size-10 place-items-center rounded-full bg-white text-xl shadow-sm text-slate-600 transition">
                 +
