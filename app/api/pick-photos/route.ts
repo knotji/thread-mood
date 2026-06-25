@@ -27,9 +27,9 @@ export async function POST(request: Request) {
       indices = images.map((_, idx) => idx + 1);
     }
 
-    if (!images || images.length < 2 || images.length > 6) {
+    if (!images || images.length < 2 || images.length > 20) {
       return NextResponse.json(
-        { error: "กรุณาเลือกรูปภาพ 2 ถึง 6 รูปนะ" },
+        { error: "กรุณาอัปโหลดอย่างน้อย 2 รูป และไม่เกิน 20 รูปนะ" },
         { status: 400 },
       );
     }

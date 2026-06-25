@@ -298,7 +298,7 @@ function DemoContent() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-                      เลือกรูปให้หน่อย (AI คัดเหลือ {(pickerResult?.shortlistedIndices?.length ?? 5)}/{images.length} รูป)
+                      รูปภาพที่อัปโหลด (AI คัดเหลือ {(pickerResult?.shortlistedIndices?.length ?? 5)}/{images.length} รูป)
                     </span>
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-semibold flex-wrap">
                       <span>แพลตฟอร์ม: {pickerPlatform}</span>

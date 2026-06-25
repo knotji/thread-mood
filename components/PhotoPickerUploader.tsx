@@ -165,7 +165,7 @@ export function PhotoPickerUploader({
         <div>
           <h2 className="font-semibold text-slate-950">อัปโหลดเซตรูปภาพ</h2>
           <p className="mt-1 text-sm text-slate-500 font-normal">
-            อัปโหลดรูปภาพ 2-20 รูป เพื่อให้ AI เลือกและวิเคราะห์รูปที่ดีที่สุดให้
+            อัปโหลดได้สูงสุด 20 รูป เดี๋ยว AI จะคัดรูปที่น่าสนใจที่สุดก่อนวิเคราะห์ละเอียด
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

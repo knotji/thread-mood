@@ -188,8 +188,10 @@ export default function Home() {
   async function handlePickPhotos() {
     const nextErrors: PickerErrors = {};
 
-    if (images.length < 2 || images.length > 20) {
-      nextErrors.images = "กรุณาอัปโหลดรูปภาพอย่างน้อย 2 รูป และไม่เกิน 20 รูปนะ";
+    if (images.length < 2) {
+      nextErrors.images = "กรุณาอัปโหลดอย่างน้อย 2 รูป เพื่อให้ AI เปรียบเทียบได้";
+    } else if (images.length > 20) {
+      nextErrors.images = "อัปโหลดได้สูงสุด 20 รูปนะ";
     }
     if (!pickerPlatform) {
       nextErrors.platform = "กรุณาเลือกแพลตฟอร์มก่อนนะ";
@@ -315,7 +317,7 @@ export default function Home() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-                      เลือกรูปให้หน่อย (AI คัดเหลือ {(pickerResult?.shortlistedIndices?.length ?? 0)}/{images.length} รูป)
+                      รูปภาพที่อัปโหลด (AI คัดเหลือ {(pickerResult?.shortlistedIndices?.length ?? 0)}/{images.length} รูป)
                     </span>
                     <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-semibold flex-wrap">
                       <span>แพลตฟอร์ม: {pickerPlatform}</span>
@@ -455,7 +457,7 @@ export default function Home() {
 
                 {images.length < 2 ? (
                   <p className="text-xs text-slate-500 font-semibold mb-2">
-                    💡 อัปโหลดอย่างน้อย 2 รูป เพื่อเริ่มการคัดสรรด้วย AI
+                    💡 กรุณาอัปโหลดอย่างน้อย 2 รูป เพื่อให้ AI เปรียบเทียบได้
                   </p>
                 ) : null}
 
@@ -475,7 +477,7 @@ export default function Home() {
                   {isLoading
                     ? "กำลังคัดและวิเคราะห์รูปภาพด้วย AI…"
                     : isPickerCompressing
-                    ? "กำลังปรับขนาดรูป…"
+                    ? "กำลังปรับขนาดรูปให้เบาลง…"
                     : "ให้ AI คัดและวิเคราะห์รูปให้"}
                 </button>
               </>
