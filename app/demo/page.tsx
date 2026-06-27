@@ -52,26 +52,10 @@ const mockThreadResult: ThreadResult = {
   ],
   hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#ท้องฟ้า", "#เธรดความรู้สึก"],
   musicMatch: {
-    mood: "เพลงเหงาละมุน ฟังสบาย จังหวะอะคูสติกช้า ๆ",
-    whyItFits: "เข้ากับอารมณ์ของภาพท้องฟ้ายามเย็น ช่วยพยุงบรรยากาศให้ดิ่งลึกแต่ยังอบอุ่นในหัวใจ",
-    songKeywords: ["acoustic thai indie", "reels sad music", "เพลงเหงาปล่อยใจ"],
-    songSuggestions: [
-      {
-        title: "ตกละมุน",
-        artist: "Landokmai",
-        reason: "ให้ฟีลล่องลอย เหมาะกับบรรยากาศช่วงพระอาทิตย์ตกดิน"
-      },
-      {
-        title: "ปล่อยใจ",
-        artist: "Safeplanet",
-        reason: "จังหวะฟังสบาย ช่วยเยียวยาจิตใจและชวนล่องลอยไปกับภาพ"
-      },
-      {
-        title: "คิดถึงยามเย็น",
-        artist: "Indie Artist",
-        reason: "เน้นเสียงกีตาร์เบา ๆ สื่อถึงความคิดถึงที่ไม่มีจุดหมาย"
-      }
-    ]
+    musicMood: "เพลงเหงาละมุน ฟังสบาย จังหวะอะคูสติกช้า ๆ",
+    suggestedSearchTerms: ["acoustic thai indie", "reels sad music", "เพลงเหงาปล่อยใจ"],
+    selectedSongIds: ["12", "18"],
+    musicNote: "เข้ากับอารมณ์ของภาพท้องฟ้ายามเย็น ช่วยพยุงบรรยากาศให้ดิ่งลึกแต่ยังอบอุ่นในหัวใจ"
   },
   bestPick: {
     overlay: "ท้องฟ้ายังกว้างพอ\nให้เราวางความเหนื่อยล้า",

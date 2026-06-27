@@ -1,15 +1,22 @@
 import type { ThreadResult } from "@/types/thread";
 import { CopyButton } from "./CopyButton";
+import { songCatalog } from "@/src/data/songCatalog";
 
 type ReadySummaryProps = {
   result: ThreadResult;
 };
 
 export function ReadySummary({ result }: ReadySummaryProps) {
-  const primarySong = result.musicMatch.songSuggestions[0];
+  const matchedSongs = (result.musicMatch.selectedSongIds ?? [])
+    .map((id) => songCatalog.find((song) => song.id === id))
+    .filter((song): song is typeof songCatalog[number] => song !== undefined);
+
+  const primarySong = matchedSongs[0];
   const songLine = primarySong
     ? `${primarySong.title} - ${primarySong.artist}`
-    : result.musicMatch.songKeywords[0];
+    : `ลองค้นเพลงแนว: ${result.musicMatch.musicMood}`;
+
+  const searchKeywords = result.musicMatch.suggestedSearchTerms ?? [];
   const hashtags = result.hashtags.join(" ");
   const copyValue = [
     "ข้อความบนคลิป / ใต้คลิป:",
@@ -20,7 +27,9 @@ export function ReadySummary({ result }: ReadySummaryProps) {
     "",
     "เพลง:",
     songLine,
-    `Keywords: ${result.musicMatch.songKeywords.join(", ")}`,
+    `Keywords: ${searchKeywords.join(", ")}`,
+    "",
+    "แนะนำให้เช็กชื่อเพลงใน IG/TikTok อีกครั้งก่อนลงจริง",
   ].join("\n");
 
   return (
@@ -55,12 +64,15 @@ export function ReadySummary({ result }: ReadySummaryProps) {
         </SummaryItem>
         <SummaryItem
           title="เพลง"
-          copyValue={`${songLine}\nKeywords: ${result.musicMatch.songKeywords.join(", ")}`}
+          copyValue={`${songLine}\nKeywords: ${searchKeywords.join(", ")}\nแนะนำให้เช็กชื่อเพลงใน IG/TikTok อีกครั้งก่อนลงจริง`}
           copyLabel="คัดลอกเพลง"
         >
           <span className="font-semibold">{songLine}</span>
           <span className="mt-1 block text-sm text-slate-500">
-            ค้นเพิ่มใน IG Music: {result.musicMatch.songKeywords.join(", ")}
+            ค้นเพิ่มใน IG/TikTok: {searchKeywords.join(", ")}
+          </span>
+          <span className="mt-1 block text-[10px] text-slate-400 italic font-medium">
+            * แนะนำให้เช็กชื่อเพลงใน IG/TikTok อีกครั้งก่อนลงจริง
           </span>
         </SummaryItem>
       </div>

@@ -11,10 +11,10 @@ export type ThreadResult = {
   captions: string[];
   hashtags: string[];
   musicMatch: {
-    mood: string;
-    whyItFits: string;
-    songKeywords: string[];
-    songSuggestions: SongSuggestion[];
+    musicMood: string;
+    suggestedSearchTerms: string[];
+    selectedSongIds: string[];
+    musicNote: string;
   };
   bestPick: {
     overlay: string;

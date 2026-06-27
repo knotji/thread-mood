@@ -1,5 +1,14 @@
 import { GoogleGenAI, Type, type GenerateContentParameters } from "@google/genai";
 import type { ThreadResult, PhotoPickResult } from "@/types/thread";
+import { songCatalog } from "@/src/data/songCatalog";
+
+const formattedCatalog = songCatalog
+  .map(
+    (song) =>
+      `- id: "${song.id}", title: "${song.title}", artist: "${song.artist}", moods: [${song.moods.map((m) => `"${m}"`).join(", ")}], tags: [${song.tags.map((t) => `"${t}"`).join(", ")}], energy: "${song.energy}"${song.note ? `, note: "${song.note}"` : ""}`,
+  )
+  .join("\n");
+
 
 type GenerateThreadInput = {
   imageBase64: string;
@@ -39,30 +48,18 @@ const responseSchema = {
     musicMatch: {
       type: Type.OBJECT,
       properties: {
-        mood: { type: Type.STRING },
-        whyItFits: { type: Type.STRING },
-        songKeywords: {
+        musicMood: { type: Type.STRING },
+        suggestedSearchTerms: {
           type: Type.ARRAY,
           items: { type: Type.STRING },
-          minItems: 3,
-          maxItems: 3,
         },
-        songSuggestions: {
+        selectedSongIds: {
           type: Type.ARRAY,
-          minItems: 3,
-          maxItems: 3,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              artist: { type: Type.STRING },
-              reason: { type: Type.STRING },
-            },
-            required: ["title", "artist", "reason"],
-          },
+          items: { type: Type.STRING },
         },
+        musicNote: { type: Type.STRING },
       },
-      required: ["mood", "whyItFits", "songKeywords", "songSuggestions"],
+      required: ["musicMood", "suggestedSearchTerms", "selectedSongIds", "musicNote"],
     },
     bestPick: {
       type: Type.OBJECT,
@@ -149,27 +146,10 @@ export const fallbackResult: ThreadResult = {
     "#ฮีลใจ",
   ],
   musicMatch: {
-    mood: "เพลงไทยละมุน ๆ ฟังสบาย มีความเหงาเล็กน้อยแต่ไม่หม่น",
-    whyItFits:
-      "เข้ากับเธรดที่เล่าอารมณ์นิ่ง ๆ และให้พื้นที่กับความรู้สึก เพลงควรช่วยพยุง mood ให้คนอ่านต่อจนจบ",
-    songKeywords: ["thai indie healing", "soft acoustic thai", "เพลงฮีลใจ"],
-    songSuggestions: [
-      {
-        title: "ยินดี",
-        artist: "Boy Imagine",
-        reason: "ให้ความรู้สึกอบอุ่น เรียบง่าย และเหมาะกับคลิปที่มีจังหวะช้า",
-      },
-      {
-        title: "เธอทั้งนั้น",
-        artist: "Groove Riders",
-        reason: "ละมุน ฟังง่าย และทำให้ภาพธรรมดาดูมีความรู้สึกขึ้น",
-      },
-      {
-        title: "ปล่อย",
-        artist: "Pop Pongkool",
-        reason: "เหมาะกับ mood ปล่อยวางและค่อย ๆ กลับมาดูแลใจตัวเอง",
-      },
-    ],
+    musicMood: "เพลงไทยละมุน ๆ ฟังสบาย มีความเหงาเล็กน้อยแต่ไม่หม่น",
+    suggestedSearchTerms: ["thai indie healing", "soft acoustic thai", "เพลงฮีลใจ"],
+    selectedSongIds: ["1", "2"],
+    musicNote: "เข้ากับเธรดที่เล่าอารมณ์นิ่ง ๆ และให้พื้นที่กับความรู้สึก เพลงควรช่วยพยุง mood ให้คนอ่านต่อจนจบ",
   },
   bestPick: {
     overlay: "ไม่ได้หายไปไหน\nแค่กำลังกลับมาหาตัวเอง",
@@ -204,27 +184,10 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
       ],
       hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#runningmotivation", "#วิ่งไหนดี"],
       musicMatch: {
-        mood: "เพลงจังหวะกลาง ๆ มีพลังบวก ฟังแล้วอยากก้าวต่อ",
-        whyItFits:
-          "เข้ากับเธรดที่พูดถึงความพยายาม การกลับมาหาตัวเอง และพลังใจระหว่างทาง",
-        songKeywords: ["running reels audio", "thai pop motivation", "upbeat healing"],
-        songSuggestions: [
-          {
-            title: "Golden Hour",
-            artist: "JVKE",
-            reason: "ให้ฟีลสว่าง มีพลัง และเข้ากับคลิปวิ่งช่วงแสงสวย",
-          },
-          {
-            title: "เดินมาส่ง",
-            artist: "First Anuwat",
-            reason: "มีความอบอุ่นและเดินหน้าต่อ เหมาะกับ mood ฮีลใจ",
-          },
-          {
-            title: "Good Days",
-            artist: "SZA",
-            reason: "ฟีลปล่อยใจและกลับมาอยู่กับตัวเอง ใช้กับคลิป aesthetic ได้ดี",
-          },
-        ],
+        musicMood: "เพลงจังหวะกลาง ๆ มีพลังบวก ฟังแล้วอยากก้าวต่อ",
+        suggestedSearchTerms: ["running reels audio", "thai pop motivation", "upbeat healing"],
+        selectedSongIds: ["13", "15"],
+        musicNote: "เข้ากับเธรดที่พูดถึงความพยายาม การกลับมาหาตัวเอง และพลังใจระหว่างทาง"
       },
       bestPick: {
         overlay: "ไม่ต้องชนะใคร\nแค่ไม่แพ้ใจตัวเอง",
@@ -252,27 +215,10 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
       ],
       hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#เธรดความรู้สึก", "#อกหัก"],
       musicMatch: {
-        mood: "เพลงเศร้านิด ๆ แต่ยังสวยและไม่ดาร์กเกินไป",
-        whyItFits:
-          "เข้ากับเธรดที่ยอมรับความเสียใจแต่ยังเลือกพาตัวเองออกมา",
-        songKeywords: ["sad thai pop reels", "heartbreak healing", "thai indie sad"],
-        songSuggestions: [
-          {
-            title: "ใจหายอ่ะ สงสัยอยู่ที่เธอ",
-            artist: "Milli",
-            reason: "มีความเจ็บแบบร่วมสมัยและเข้ากับคลิป Reels ได้ง่าย",
-          },
-          {
-            title: "Until I Found You",
-            artist: "Stephen Sanchez",
-            reason: "โรแมนติก เหงา และใช้กับภาพ mood ละมุนได้ดี",
-          },
-          {
-            title: "double take",
-            artist: "dhruv",
-            reason: "ฟีลคิดถึงนุ่ม ๆ ไม่ดราม่าเกินไป",
-          },
-        ],
+        musicMood: "เพลงเศร้านิด ๆ แต่ยังสวยและไม่ดาร์กเกินไป",
+        suggestedSearchTerms: ["sad thai pop reels", "heartbreak healing", "thai indie sad"],
+        selectedSongIds: ["2", "3", "8"],
+        musicNote: "เข้ากับเธรดที่ยอมรับความเสียใจแต่ยังเลือกพาตัวเองออกมา"
       },
       bestPick: {
         overlay: "เสียใจได้\nแต่อย่าเสียตัวเอง",
@@ -300,27 +246,10 @@ export function createLocalFallbackResult(category: string, tone: string): Threa
       ],
       hashtags: ["#reelsไทย", "#viralreels", "#fyp", "#aestheticreels", "#ท้องฟ้า"],
       musicMatch: {
-        mood: "เพลงละมุน ฟุ้ง ๆ เหมาะกับภาพฟ้าและช่วงเย็น",
-        whyItFits:
-          "เข้ากับความนุ่ม เหงา และปล่อยวางของเธรด โดยไม่ทำให้เศร้าเกินไป",
-        songKeywords: ["aesthetic reels audio", "sunset pop", "soft thai indie"],
-        songSuggestions: [
-          {
-            title: "Moonlight",
-            artist: "Kali Uchis",
-            reason: "ฟีลนุ่ม ล่อง และเข้ากับคลิป aesthetic ได้ดี",
-          },
-          {
-            title: "Glue Song",
-            artist: "beabadoobee",
-            reason: "ละมุน อบอุ่น และเหมาะกับภาพท้องฟ้านิ่ง ๆ",
-          },
-          {
-            title: "ลืมไปแล้วว่าลืมยังไง",
-            artist: "Jeff Satur",
-            reason: "มีความคิดถึงละมุน ๆ เหมาะกับ sunset/sky mood",
-          },
-        ],
+        musicMood: "เพลงละมุน ฟุ้ง ๆ เหมาะกับภาพฟ้าและช่วงเย็น",
+        suggestedSearchTerms: ["aesthetic reels audio", "sunset pop", "soft thai indie"],
+        selectedSongIds: ["6", "11", "14"],
+        musicNote: "เข้ากับความนุ่ม เหงา และปล่อยวางของเธรด โดยไม่ทำให้เศร้าเกินไป"
       },
       bestPick: {
         overlay: "ฟ้ายังเปลี่ยนสี\nเราก็เปลี่ยนใจได้",
@@ -400,21 +329,21 @@ export async function generateThreadWithGemini({
 - hashtags ต้องมีแกนแมสอย่างน้อย 3 ตัวจากกลุ่มนี้: #reelsไทย, #viralreels, #fyp, #tiktokพาเพลิน, #เธรดความรู้สึก, #aestheticreels
 - hashtags ที่เหลือค่อยเติมตาม mood/category เช่น running, cafe, healing, sky, heartbreak
 - หลีกเลี่ยง hashtag แคบเกินไป ยาวเกินไป หรือ hashtag ชื่อเพลง
-- musicMatch.songKeywords ต้องมี exactly 3 items
-- musicMatch.songSuggestions ต้องมี exactly 3 items
+- musicMatch.musicMood ต้องระบุสไตล์และอารมณ์เพลงเป็นภาษาไทยสั้น ๆ เช่น "เพลงไทยอะคูสติกเหงา ๆ ช้า ๆ" หรือ "เพลงป๊อปรักตัวเองจังหวะปานกลาง"
+- musicMatch.suggestedSearchTerms ต้องมี exactly 3 items เป็นคำหรือวลีสำหรับค้นหาเพลงแนวนี้ใน IG/TikTok
+- musicMatch.selectedSongIds ให้เลือกเฉพาะ ID เพลงที่เข้ากับ mood ของคลิปจากรายการ Song Catalog ด้านล่างนี้เท่านั้น (ห้ามสร้างหรือเพิ่ม ID อื่นที่ไม่มีในรายการเด็ดขาด หากไม่มีเพลงที่เข้ากัน ให้ใส่ array ว่าง [])
+- musicMatch.musicNote ต้องอธิบายเหตุผลหรือคำแนะนำสั้น ๆ ในการใช้เพลงเป็นภาษาไทย
 - overlay text ต้องสั้น อ่านทันใน 1-2 วินาที และมี 1-2 บรรทัดเท่านั้น
 - หลีกเลี่ยง quote ที่ cringe, dramatic เกินไป, หรือ generic เกินไป
-- เพลงให้เลือกจาก mood ของเธรดที่สร้าง ไม่ใช่แค่ภาพ
-- เพลงควรให้ฟีลตามกระแส Instagram Reels/TikTok มากขึ้น แต่ไม่ต้องอ้างว่าเป็น realtime trending
-- หลีกเลี่ยงการแนะนำเพลงเดิม ๆ ที่เจอบ่อยเกินไป เช่น "ปล่อย", "ทางของฝุ่น", "ยินดี" เว้นแต่จำเป็นจริง ๆ กับ mood
-- แนะนำเพลงให้หลากหลายทั้งไทย/สากล/indie/pop โดยเลือกเพลงที่น่าค้นเจอใน IG Music และเข้ากับคลิป
-- songKeywords ต้องช่วยค้นเพลงแนวแมสหรือตามกระแสได้ เช่น viral thai pop, trending reels audio, aesthetic pop
 - ถ้าหมวดเป็น "วิ่ง" ให้มีมุม running, self-growth, effort, moving forward หรือ healing
 - ถ้าหมวดเป็น "ท้องฟ้า" หรือ "พระอาทิตย์ตก" ให้มีมุม soft, lonely, nostalgic, letting-go หรือ healing
 - ถ้าหมวดเป็น "อกหัก" ให้ emotional แต่ไม่มืดเกินไป
 - ถ้าโทนเป็น "กวนตีน" ให้ playful และ funny แต่ไม่หยาบคาย
 - ถ้าโทนเป็น "รักตัวเอง" ให้ warm, confident และ self-kind
-- ต้องทำให้ overlayThreads, captions, bestPick.caption, musicMatch.mood และเหตุผลของเพลงสะท้อนโทน "${tone}" อย่างชัดเจน
+- ต้องทำให้ overlayThreads, captions, bestPick.caption, musicMatch.musicMood และคำแนะนำสะท้อนโทน "${tone}" อย่างชัดเจน
+
+รายการ Song Catalog ที่ได้รับอนุญาตให้เลือก:
+${formattedCatalog}
 
 ตอบเป็น JSON เท่านั้น ห้ามมี markdown หรือคำอธิบายนอก JSON
 `;
@@ -479,11 +408,15 @@ export async function generateThreadWithoutImage({
 - captions ต้องมี exactly 3 items สั้น กระชับ มี punchline หรือ insight ชัด ไม่เกิน 1-3 บรรทัด
 - overlayThreads ต้องมี exactly 5 items และอ่านทันใน 1-2 วินาที
 - hashtags ต้องมี exactly 5 items เป็นแนวแมส ๆ กว้าง ๆ เพื่อ reach และต้องมี #reelsไทย, #viralreels, #fyp อย่างน้อย 3 ตัว
-- musicMatch.songKeywords ต้องมี exactly 3 items
-- musicMatch.songSuggestions ต้องมี exactly 3 items และให้ฟีลตามกระแส Instagram Reels/TikTok มากขึ้น แต่ไม่อ้างว่า realtime trending
-- หลีกเลี่ยงเพลงเดิม ๆ ที่เจอบ่อยเกินไป เช่น "ปล่อย", "ทางของฝุ่น", "ยินดี" เว้นแต่จำเป็นจริง ๆ
+- musicMatch.musicMood ต้องระบุสไตล์และอารมณ์เพลงเป็นภาษาไทยสั้น ๆ เช่น "เพลงไทยอะคูสติกเหงา ๆ ช้า ๆ" หรือ "เพลงป๊อปรักตัวเองจังหวะปานกลาง"
+- musicMatch.suggestedSearchTerms ต้องมี exactly 3 items เป็นคำหรือวลีสำหรับค้นหาเพลงแนวนี้ in IG/TikTok
+- musicMatch.selectedSongIds ให้เลือกเฉพาะ ID เพลงที่เข้ากับ mood ของคลิปจากรายการ Song Catalog ด้านล่างนี้เท่านั้น (ห้ามสร้างหรือเพิ่ม ID อื่นที่ไม่มีในรายการเด็ดขาด หากไม่มีเพลงที่เข้ากัน ให้ใส่ array ว่าง [])
+- musicMatch.musicNote ต้องอธิบายเหตุผลหรือคำแนะนำสั้น ๆ ในการใช้เพลงเป็นภาษาไทย
 - bestPick.caption ต้องเลือก caption ที่ strongest ที่สุดสำหรับใช้เป็นข้อความบนคลิป / ใต้คลิป
-- ต้องทำให้ overlayThreads, captions, bestPick.caption, musicMatch.mood และเหตุผลของเพลงสะท้อนโทน "${tone}" อย่างชัดเจน
+- ต้องทำให้ overlayThreads, captions, bestPick.caption, musicMatch.musicMood และคำแนะนำสะท้อนโทน "${tone}" อย่างชัดเจน
+
+รายการ Song Catalog ที่ได้รับอนุญาตให้เลือก:
+${formattedCatalog}
 `;
 
   const response = await generateContentWithModelFallback(ai, {
@@ -526,14 +459,10 @@ export async function generateThreadLoose({
   "captions": ["string", "string", "string"],
   "hashtags": ["string", "string", "string", "string", "string"],
   "musicMatch": {
-    "mood": "string",
-    "whyItFits": "string",
-    "songKeywords": ["string", "string", "string"],
-    "songSuggestions": [
-      { "title": "string", "artist": "string", "reason": "string" },
-      { "title": "string", "artist": "string", "reason": "string" },
-      { "title": "string", "artist": "string", "reason": "string" }
-    ]
+    "musicMood": "string",
+    "suggestedSearchTerms": ["string", "string", "string"],
+    "selectedSongIds": ["string", "string"],
+    "musicNote": "string"
   },
   "bestPick": {
     "overlay": "string",
@@ -543,10 +472,11 @@ export async function generateThreadLoose({
 }
 
 captions คือเธรด/คำบนคลิปแบบคำคม ข้อคิด คำสอน หรือ mindset ที่คนไทยนิยมใน IG Reels
-ทุก field หลักต้องเป็นภาษาไทย ยกเว้นชื่อเพลง ชื่อศิลปิน และ songKeywords
+ทุก field หลักต้องเป็นภาษาไทย ยกเว้น suggestedSearchTerms และ selectedSongIds
 bestPick.caption ต้องเป็นข้อความหลักสำหรับใช้บนคลิป / ใต้คลิป
 hashtags ต้องแมส ๆ กว้าง ๆ เพื่อ reach และต้องมี #reelsไทย, #viralreels, #fyp อย่างน้อย 3 ตัว
-เพลงต้องฟีลตามกระแส Reels/TikTok แต่ไม่ต้องอ้างว่า realtime trending
+เพลงเลือกเฉพาะ ID จากรายการ Song Catalog ด้านล่างนี้เท่านั้น:
+${formattedCatalog}
 `;
 
   const response = await generateContentWithModelFallback(ai, {
@@ -576,6 +506,13 @@ function normalizeThreadResult(value: unknown): ThreadResult {
   const musicMatch = record.musicMatch ?? fallbackResult.musicMatch;
   const bestPick = record.bestPick ?? fallbackResult.bestPick;
 
+  const rawSongIds = Array.isArray(musicMatch?.selectedSongIds)
+    ? musicMatch.selectedSongIds
+    : fallbackResult.musicMatch.selectedSongIds;
+  const validSongIds = rawSongIds
+    .filter((id): id is string => typeof id === "string")
+    .filter((id) => songCatalog.some((song) => song.id === id));
+
   return {
     imageMood: stringOr(record.imageMood, fallbackResult.imageMood),
     contentAngle: stringOr(record.contentAngle, fallbackResult.contentAngle),
@@ -583,26 +520,14 @@ function normalizeThreadResult(value: unknown): ThreadResult {
     captions: fixedStrings(record.captions, fallbackResult.captions, 3),
     hashtags: fixedHashtags(record.hashtags, fallbackResult.hashtags, 5),
     musicMatch: {
-      mood: stringOr(musicMatch.mood, fallbackResult.musicMatch.mood),
-      whyItFits: stringOr(
-        musicMatch.whyItFits,
-        fallbackResult.musicMatch.whyItFits,
-      ),
-      songKeywords: fixedStrings(
-        musicMatch.songKeywords,
-        fallbackResult.musicMatch.songKeywords,
+      musicMood: stringOr(musicMatch?.musicMood, fallbackResult.musicMatch.musicMood),
+      suggestedSearchTerms: fixedStrings(
+        musicMatch?.suggestedSearchTerms,
+        fallbackResult.musicMatch.suggestedSearchTerms,
         3,
       ),
-      songSuggestions: Array.isArray(musicMatch.songSuggestions)
-        ? musicMatch.songSuggestions.slice(0, 3).map((song, index) => {
-            const fallback = fallbackResult.musicMatch.songSuggestions[index];
-            return {
-              title: stringOr(song?.title, fallback.title),
-              artist: stringOr(song?.artist, fallback.artist),
-              reason: stringOr(song?.reason, fallback.reason),
-            };
-          })
-        : fallbackResult.musicMatch.songSuggestions,
+      selectedSongIds: validSongIds,
+      musicNote: stringOr(musicMatch?.musicNote, fallbackResult.musicMatch.musicNote),
     },
     bestPick: {
       overlay: stringOr(bestPick.overlay, fallbackResult.bestPick.overlay),
